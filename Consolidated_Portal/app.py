@@ -23,7 +23,10 @@ os.makedirs("static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Configuration from environment variables
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+# Ensure HTTP protocol (not HTTPS for local Ollama)
+if OLLAMA_BASE_URL.startswith("https://"):
+    OLLAMA_BASE_URL = OLLAMA_BASE_URL.replace("https://", "http://", 1)
 OLLAMA_URL = f"{OLLAMA_BASE_URL}/api/generate"
 NEWS_API_URL = "https://newsapi.org/v2/top-headlines"
 NEWS_API_KEY = os.getenv("NEWS_API_KEY", "NEWS_API_KEY")  # Replace with actual API key if available
