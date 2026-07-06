@@ -389,7 +389,7 @@ def build_prompt(agent: Agent, **kwargs) -> str:
 
 
 @app.post("/api/agent/{agent_id}/invoke")
-def invoke_agent(agent_id: str, **form_data):
+async def invoke_agent(agent_id: str, prompt: str = Form(...)):
     """
     Universal agent invocation endpoint
     Works with any registered agent
@@ -401,12 +401,12 @@ def invoke_agent(agent_id: str, **form_data):
     logger.info(f"Invoking agent: {agent.name} ({agent_id})")
     
     # Build prompt from system prompt template
-    prompt = build_prompt(agent, **form_data)
+    final_prompt = build_prompt(agent, prompt=prompt)
     
     # Use first supported model
     model = agent.supportedModels[0] if agent.supportedModels else "mistral:7b"
     
-    return call_ollama(model, prompt)
+    return call_ollama(model, final_prompt)
 
 
 # ============================================================================
