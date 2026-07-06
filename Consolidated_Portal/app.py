@@ -1,10 +1,11 @@
 from fastapi import FastAPI, HTTPException, Form, Query
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import requests
 import os
 import json
+from datetime import datetime
 
 app = FastAPI(title="Consolidated Multi-Agent Portal")
 
@@ -21,14 +22,52 @@ app.add_middleware(
 os.makedirs("static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
+# Configuration from environment variables
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_URL = f"{OLLAMA_BASE_URL}/api/generate"
 NEWS_API_URL = "https://newsapi.org/v2/top-headlines"
-NEWS_API_KEY = "NEWS_API_KEY"  # Replace with actual API key if available
+NEWS_API_KEY = os.getenv("NEWS_API_KEY", "NEWS_API_KEY")  # Replace with actual API key if available
+
+# Track Ollama status
+ollama_status = {"available": True, "last_check": None, "error": None}
 
 @app.get("/")
 def serve_homepage():
     """ Serve the index.html file when accessing the root URL """
     return FileResponse(os.path.join("static", "index.html"))
+
+@app.get("/api/health")
+def health_check():
+    """ Health check endpoint """
+    return {"status": "ok", "timestamp": datetime.now().isoformat()}
+
+@app.get("/api/ollama-status")
+def check_ollama_status():
+    """ Check if Ollama is available """
+    try:
+        response = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5)
+        if response.status_code == 200:
+            ollama_status["available"] = True
+            ollama_status["error"] = None
+            ollama_status["last_check"] = datetime.now().isoformat()
+            models = response.json().get("models", [])
+            return {"available": True, "models_count": len(models), "models": [m.get("name") for m in models]}
+        else:
+            ollama_status["available"] = False
+            ollama_status["error"] = f"HTTP {response.status_code}"
+            return {"available": False, "error": f"Ollama returned HTTP {response.status_code}"}
+    except requests.exceptions.Timeout:
+        ollama_status["available"] = False
+        ollama_status["error"] = "Connection timeout"
+        return {"available": False, "error": "Ollama connection timeout. Service may be down."}
+    except requests.exceptions.ConnectionError:
+        ollama_status["available"] = False
+        ollama_status["error"] = "Connection refused"
+        return {"available": False, "error": "Cannot connect to Ollama. Is it running locally?"}
+    except Exception as e:
+        ollama_status["available"] = False
+        ollama_status["error"] = str(e)
+        return {"available": False, "error": f"Ollama check failed: {str(e)}"}
 
 # 1. AI Code Assistant
 @app.post("/api/generate_code")
@@ -119,7 +158,8 @@ def call_ollama(model_name: str, prompt: str):
         response = requests.post(
             OLLAMA_URL,
             json={"model": model_name, "prompt": prompt, "stream": False},
-            headers=headers
+            headers=headers,
+            timeout=300  # 5 min timeout for inference
         )
         response_data = response.text.strip()
         try:
@@ -127,8 +167,15 @@ def call_ollama(model_name: str, prompt: str):
         except json.JSONDecodeError:
             raise HTTPException(status_code=500, detail=f"Invalid JSON response from Ollama: {response_data}")
         return {"response": json_response.get("response", "No valid response received.")}
+    except requests.exceptions.Timeout:
+        ollama_status["available"] = False
+        raise HTTPException(status_code=503, detail="⚠️ Ollama is not responding. The service may be offline or overloaded. Please try again later.")
+    except requests.exceptions.ConnectionError:
+        ollama_status["available"] = False
+        raise HTTPException(status_code=503, detail="⚠️ Cannot connect to Ollama. Please ensure the local Ollama service is running on " + OLLAMA_BASE_URL)
     except requests.exceptions.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"Request to Ollama failed: {str(e)}")
+        ollama_status["available"] = False
+        raise HTTPException(status_code=503, detail=f"⚠️ Ollama request failed: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

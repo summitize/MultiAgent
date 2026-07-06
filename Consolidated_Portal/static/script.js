@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Check Ollama status on page load
+    checkOllamaStatus();
+    
     // Navigation logic
     const navLinks = document.querySelectorAll('.nav-links li');
     const toolSections = document.querySelectorAll('.tool-section');
@@ -176,5 +179,62 @@ document.addEventListener('DOMContentLoaded', () => {
              .replace(/>/g, "&gt;")
              .replace(/"/g, "&quot;")
              .replace(/'/g, "&#039;");
+    }
+
+    // Function to check Ollama status
+    async function checkOllamaStatus() {
+        try {
+            const response = await fetch('/api/ollama-status');
+            const data = await response.json();
+            
+            if (!data.available) {
+                showOllamaWarning(data.error || 'Ollama is not available');
+            } else {
+                removeOllamaWarning();
+            }
+        } catch (error) {
+            console.log('Could not check Ollama status:', error);
+            showOllamaWarning('Could not verify Ollama status');
+        }
+    }
+
+    function showOllamaWarning(message) {
+        let warningBanner = document.getElementById('ollama-warning-banner');
+        if (!warningBanner) {
+            warningBanner = document.createElement('div');
+            warningBanner.id = 'ollama-warning-banner';
+            warningBanner.style.cssText = `
+                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                color: white;
+                padding: 15px 20px;
+                margin: 0;
+                border-bottom: 2px solid #991b1b;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-weight: 500;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            `;
+            document.body.insertBefore(warningBanner, document.body.firstChild);
+        }
+        warningBanner.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-exclamation-triangle" style="font-size: 18px;"></i>
+                <span>⚠️ Ollama Service Unavailable: ${escapeHtml(message)}</span>
+            </div>
+            <button onclick="this.parentElement.style.display='none';" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: 500;">
+                ✕
+            </button>
+        `;
+    }
+
+    function removeOllamaWarning() {
+        const warningBanner = document.getElementById('ollama-warning-banner');
+        if (warningBanner) {
+            warningBanner.remove();
+        }
     }
 });
