@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consolidated AI Portal</title>
+    <!-- Use Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-microchip"></i> <span>AI Portal</span></h2>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-target="code-assistant"><i class="fa-solid fa-code"></i> <span>Code Assistant</span></li>
+                <li data-target="content-writer"><i class="fa-solid fa-pen-nib"></i> <span>Content Writer</span></li>
+                <li data-target="legal-analyzer"><i class="fa-solid fa-scale-balanced"></i> <span>Legal Analyzer</span></li>
+                <li data-target="news-summarizer"><i class="fa-solid fa-newspaper"></i> <span>News Summarizer</span></li>
+                <li data-target="proofreader"><i class="fa-solid fa-spell-check"></i> <span>Proofreader</span></li>
+                <li data-target="text-summarizer"><i class="fa-solid fa-compress"></i> <span>Text Summarizer</span></li>
+                <li data-target="virtual-assistant"><i class="fa-solid fa-robot"></i> <span>Virtual Assistant</span></li>
+                <li data-target="customer-support"><i class="fa-solid fa-headset"></i> <span>Customer Support</span></li>
+                <li data-target="ecom-recommender"><i class="fa-solid fa-cart-shopping"></i> <span>Shop Recommender</span></li>
+                <li data-target="symptom-checker"><i class="fa-solid fa-stethoscope"></i> <span>Symptom Checker</span></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h1 id="page-title">AI Code Assistant</h1>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Code Assistant Form -->
+                <section id="code-assistant" class="tool-section active-section">
+                    <form id="form-code">
+                        <div class="form-group">
+                            <label>Prompt</label>
+                            <textarea name="prompt" placeholder="Describe the code you want or paste code to debug..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Mode</label>
+                            <select name="mode">
+                                <option value="generate">Generate</option>
+                                <option value="debug">Debug</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary">Generate <i class="fa-solid fa-sparkles"></i></button>
+                    </form>
+                </section>
+
+                <!-- Content Writer Form -->
+                <section id="content-writer" class="tool-section">
+                    <form id="form-content">
+                        <div class="form-group">
+                            <label>Topic</label>
+                            <input type="text" name="topic" placeholder="E.g. Future of AI">
+                        </div>
+                        <div class="form-group">
+                            <label>Style</label>
+                            <input type="text" name="style" placeholder="E.g. Professional, Humorous">
+                        </div>
+                        <button type="submit" class="btn-primary">Write Content <i class="fa-solid fa-pen"></i></button>
+                    </form>
+                </section>
+
+                <!-- Legal Analyzer Form -->
+                <section id="legal-analyzer" class="tool-section">
+                    <form id="form-legal">
+                        <div class="form-group">
+                            <label>Legal Text</label>
+                            <textarea name="text" placeholder="Paste legal document here..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Analyze <i class="fa-solid fa-magnifying-glass"></i></button>
+                    </form>
+                </section>
+
+                <!-- News Summarizer Form -->
+                <section id="news-summarizer" class="tool-section">
+                    <form id="form-news">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select name="category">
+                                <option value="technology">Technology</option>
+                                <option value="business">Business</option>
+                                <option value="health">Health</option>
+                                <option value="science">Science</option>
+                                <option value="sports">Sports</option>
+                                <option value="entertainment">Entertainment</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary">Fetch & Summarize <i class="fa-solid fa-bolt"></i></button>
+                    </form>
+                </section>
+
+                <!-- Proofreader Form -->
+                <section id="proofreader" class="tool-section">
+                    <form id="form-proofread">
+                        <div class="form-group">
+                            <label>Text to Proofread</label>
+                            <textarea name="text" placeholder="Paste your text here..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Proofread <i class="fa-solid fa-check-double"></i></button>
+                    </form>
+                </section>
+
+                <!-- Text Summarizer Form -->
+                <section id="text-summarizer" class="tool-section">
+                    <form id="form-summarizer">
+                        <div class="form-group">
+                            <label>Text to Summarize</label>
+                            <textarea name="text" placeholder="Paste large text here..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Summarize <i class="fa-solid fa-compress"></i></button>
+                    </form>
+                </section>
+
+                <!-- Virtual Assistant Form -->
+                <section id="virtual-assistant" class="tool-section">
+                    <form id="form-virtual">
+                        <div class="form-group">
+                            <label>Your Request</label>
+                            <input type="text" name="user_query" placeholder="Ask the assistant...">
+                        </div>
+                        <button type="submit" class="btn-primary">Ask <i class="fa-solid fa-robot"></i></button>
+                    </form>
+                </section>
+
+                <!-- Customer Support Form -->
+                <section id="customer-support" class="tool-section">
+                    <form id="form-support">
+                        <div class="form-group">
+                            <label>User Query</label>
+                            <textarea name="user_query" placeholder="Customer issue..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Get Response <i class="fa-solid fa-comment-dots"></i></button>
+                    </form>
+                </section>
+
+                <!-- Shop Recommender Form -->
+                <section id="ecom-recommender" class="tool-section">
+                    <form id="form-ecom">
+                        <div class="form-group">
+                            <label>User Preferences</label>
+                            <input type="text" name="preferences" placeholder="E.g. Gaming laptop under $1000">
+                        </div>
+                        <button type="submit" class="btn-primary">Recommend <i class="fa-solid fa-gift"></i></button>
+                    </form>
+                </section>
+
+                <!-- Symptom Checker Form -->
+                <section id="symptom-checker" class="tool-section">
+                    <form id="form-symptom">
+                        <div class="form-group">
+                            <label>Symptoms</label>
+                            <textarea name="symptoms" placeholder="Describe symptoms..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Check Symptoms <i class="fa-solid fa-briefcase-medical"></i></button>
+                    </form>
+                </section>
+
+                <!-- Response Area -->
+                <div class="response-card" id="response-container">
+                    <div class="loader" id="loader" style="display: none;">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i>
+                        <span>Processing request with Ollama...</span>
+                    </div>
+                    <div class="response-content" id="response-content">
+                        <!-- Result from API will be rendered here -->
+                        <div class="placeholder-text">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Select an agent, fill the details, and run to see response output.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/static/script.js"></script>
+</body>
+</html>
