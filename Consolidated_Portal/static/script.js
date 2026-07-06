@@ -12,18 +12,29 @@ const logger = {
 let allAgents = [];
 let currentAgent = null;
 
-// Endpoint map: agent-id → legacy API path
+// Endpoint map: agent-id → unified API path via /api/agent/{agent_id}/invoke
 const endpointMap = {
-    'code-assistant':   '/api/generate_code',
-    'content-writer':   '/api/generate_content',
-    'legal-analyzer':   '/api/analyze_legal_text',
-    'news-summarizer':  '/api/fetch_and_summarize_news',
-    'proofreader':      '/api/proofread',
-    'text-summarizer':  '/api/summarize',
-    'virtual-assistant':'/api/virtual_assistant',
-    'customer-support': '/api/customer_support',
-    'shop-recommender': '/api/ecommerce_recommender',
-    'symptom-checker':  '/api/medical_symptom_checker',
+    // DeliveryAI Agents - all use unified endpoint
+    'executive-copilot': '/api/agent/executive-copilot/invoke',
+    'program-manager': '/api/agent/program-manager/invoke',
+    'delivery-manager': '/api/agent/delivery-manager/invoke',
+    'scrum-master': '/api/agent/scrum-master/invoke',
+    'product-owner': '/api/agent/product-owner/invoke',
+    'business-analyst': '/api/agent/business-analyst/invoke',
+    'architect': '/api/agent/architect/invoke',
+    'engineering-manager': '/api/agent/engineering-manager/invoke',
+    'developer': '/api/agent/developer/invoke',
+    'qa-engineer': '/api/agent/qa-engineer/invoke',
+    'devops-engineer': '/api/agent/devops-engineer/invoke',
+    'security-engineer': '/api/agent/security-engineer/invoke',
+    'raid-manager': '/api/agent/raid-manager/invoke',
+    'risk-prediction': '/api/agent/risk-prediction/invoke',
+    'resource-manager': '/api/agent/resource-manager/invoke',
+    'delivery-analytics': '/api/agent/delivery-analytics/invoke',
+    'meeting-intelligence': '/api/agent/meeting-intelligence/invoke',
+    'documentation-assistant': '/api/agent/documentation-assistant/invoke',
+    'communication-assistant': '/api/agent/communication-assistant/invoke',
+    'pmo': '/api/agent/pmo/invoke',
 };
 
 // ============================================================================
@@ -44,7 +55,7 @@ async function loadAgents() {
         logger.error('Failed to load agents:', err);
         const nav = document.getElementById('agent-nav');
         if (nav) nav.innerHTML = `<li class="loading" style="color:#ef4444;">
-            <i class="fa-solid fa-exclamation-circle"></i> Failed to load agents.<br><small>Is the server running on port 8080?</small></li>`;
+            <i class="fa-solid fa-exclamation-circle"></i> Failed to load agents.<br><small>Is the server running on port 8000?</small></li>`;
     }
 }
 
@@ -171,22 +182,13 @@ async function handleAgentSubmit(e) {
 
     try {
         const formData = new FormData(e.target);
-        let responseData;
-
-        if (currentAgent.id === 'news-summarizer') {
-            const cat = formData.get('category') || 'technology';
-            const res = await fetch(`/api/fetch_and_summarize_news?category=${encodeURIComponent(cat)}`);
-            if (!res.ok) throw new Error(`Server ${res.status}`);
-            responseData = await res.json();
-        } else {
-            const endpoint = endpointMap[currentAgent.id] || `/api/agent/${currentAgent.id}/invoke`;
-            const res = await fetch(endpoint, { method:'POST', body:formData });
-            if (!res.ok) {
-                const errText = await res.text();
-                throw new Error(`Server ${res.status}: ${errText}`);
-            }
-            responseData = await res.json();
+        const endpoint = endpointMap[currentAgent.id] || `/api/agent/${currentAgent.id}/invoke`;
+        const res = await fetch(endpoint, { method:'POST', body:formData });
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`Server ${res.status}: ${errText}`);
         }
+        const responseData = await res.json();
 
         displayResponse(responseData);
     } catch (err) {
@@ -305,6 +307,4 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.addEventListener('submit', e => {
         if (e.target && e.target.id === 'dynamic-agent-form') handleAgentSubmit(e);
     });
-
 });
-        link.addEventListener('click', () => {

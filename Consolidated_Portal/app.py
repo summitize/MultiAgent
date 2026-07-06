@@ -81,27 +81,60 @@ ollama_status = {"available": True, "last_check": None, "error": None}
 @dataclass
 class Agent:
     """
-    Unified Agent Interface
-    Every agent must expose these properties to be managed by the system.
+    DeliveryAI Agent Interface - Advanced Enterprise Agent Model
+    Every agent in the organization represents one team member.
     """
-    name: str  # Display name (e.g., "Code Assistant", "Program Director")
-    id: str  # Unique identifier (e.g., "code-assistant", "program-director")
+    # Identity
+    name: str  # Display name (e.g., "Program Manager", "Scrum Master")
+    id: str  # Unique identifier (e.g., "program-manager", "scrum-master")
     description: str  # What the agent does
+    role: str  # Job title/role in organization
+    office: str  # Office tier (executive, delivery, engineering, intelligence, admin)
+    
+    # AI Configuration
     systemPrompt: str  # System instruction/prompt template
     supportedModels: List[str]  # List of models this agent can use
-    category: str  # Category (e.g., "development", "content", "delivery")
-    icon: str  # FontAwesome icon class (e.g., "fa-code", "fa-crown")
-    tools: List[Dict[str, Any]] = field(default_factory=list)  # Available tools for the agent
-    memory: Dict[str, Any] = field(default_factory=dict)  # Memory/context storage
+    recommendedLLM: str = "mistral:7b"  # Preferred model
+    temperature: float = 0.7  # LLM temperature
+    reasoningMode: bool = False  # Enable advanced reasoning
+    
+    # Agent Capabilities
+    icon: str = "fa-user-tie"  # FontAwesome icon class
+    capabilities: List[str] = field(default_factory=list)  # Core capabilities
+    tools: List[Dict[str, Any]] = field(default_factory=list)  # Available tools
+    templates: List[Dict[str, str]] = field(default_factory=list)  # Response templates
+    quickActions: List[str] = field(default_factory=list)  # Quick action buttons
+    
+    # Memory & Context
+    memory: Dict[str, Any] = field(default_factory=dict)  # Long-term memory/context
+    conversationHistory: List[Dict[str, str]] = field(default_factory=list)  # Recent conversations
+    contextDocuments: List[str] = field(default_factory=list)  # Related documents
+    
+    # Output & Reporting
+    outputFormats: List[str] = field(default_factory=list)  # Supported formats (markdown, json, ppt, docx, pdf)
+    reportTemplates: List[Dict[str, Any]] = field(default_factory=list)  # Report types
+    exportOptions: List[str] = field(default_factory=list)  # Export capabilities
+    
+    # Guidance & Learning
+    suggestedPrompts: List[str] = field(default_factory=list)  # Example prompts
     actions: List[str] = field(default_factory=list)  # Available actions
-    suggestedPrompts: List[str] = field(default_factory=list)  # Example prompts to guide users
+    kpis: List[Dict[str, Any]] = field(default_factory=list)  # Key Performance Indicators
+    
+    # Collaboration
+    collaborators: List[str] = field(default_factory=list)  # Other agent IDs this agent works with
+    responsibilities: List[str] = field(default_factory=list)  # Primary responsibilities
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert agent to dictionary, excluding memory for API responses"""
         data = asdict(self)
-        # Don't expose internal memory in API
+        # Don't expose internal memory in API by default
         data.pop('memory', None)
+        data.pop('conversationHistory', None)
         return data
+    
+    def to_dict_with_memory(self) -> Dict[str, Any]:
+        """Convert agent to dictionary including memory (for internal use)"""
+        return asdict(self)
 
 
 class AgentRegistry:
@@ -137,165 +170,404 @@ agent_registry = AgentRegistry()
 
 # Initialize all agents
 def initialize_agents():
-    """Register all agents with the system"""
+    """Register all DeliveryAI agents with the system"""
     
     agents = [
+        # ========== EXECUTIVE OFFICE ==========
         Agent(
-            name="Code Assistant",
-            id="code-assistant",
-            description="Generate or debug code with support for multiple languages",
-            systemPrompt="Write clean, well-documented {prompt} code snippet.",
-            supportedModels=["qwen2.5-coder:7b"],
-            category="development",
+            name="Executive Copilot",
+            id="executive-copilot",
+            role="Executive Leadership",
+            office="executive",
+            description="Strategic partner for executives. Provides portfolio insights, risk assessment, and board-level recommendations.",
+            systemPrompt="You are an Executive Copilot advising C-level executives. Provide strategic insights, portfolio health analysis, and high-level recommendations. Focus on: business impact, ROI, risk mitigation, stakeholder alignment. User query: {prompt}",
+            recommendedLLM="claude:latest",
+            supportedModels=["claude:latest", "deepseek:latest", "qwen2.5:32b"],
+            icon="fa-crown",
+            capabilities=["Portfolio Analysis", "Strategic Planning", "Risk Assessment", "Executive Reporting", "Stakeholder Communication"],
+            quickActions=["Portfolio Health", "Executive Summary", "Risk Report", "Board Deck"],
+            suggestedPrompts=["What is the portfolio health status?", "Analyze cross-project risks", "Create executive summary"],
+            outputFormats=["markdown", "json", "ppt", "docx", "pdf"],
+            exportOptions=["PDF", "PowerPoint", "Word"],
+            kpis=[{"name": "Portfolio Health", "unit": "%"}, {"name": "Budget Variance", "unit": "%"}],
+            responsibilities=["Portfolio Strategy", "Board Reporting", "Investor Communication", "Enterprise Risk Management"],
+            collaborators=["program-manager", "pmo", "risk-manager"]
+        ),
+        
+        # ========== DELIVERY OFFICE ==========
+        Agent(
+            name="Program Manager",
+            id="program-manager",
+            role="Program Management",
+            office="delivery",
+            description="Manages multiple projects across portfolio. Tracks milestones, dependencies, risks, budgets, and stakeholder coordination.",
+            systemPrompt="You are a Program Manager overseeing multiple interdependent projects. Track: milestones, dependencies, budget, risks, stakeholder updates. Provide weekly status reports and executive dashboards. Program context: {prompt}",
+            recommendedLLM="claude:latest",
+            supportedModels=["claude:latest", "qwen2.5:32b"],
+            icon="fa-chart-line",
+            capabilities=["Program Planning", "Milestone Tracking", "Risk Management", "Budget Monitoring", "Weekly Reports", "Stakeholder Updates"],
+            quickActions=["Weekly Status", "Milestone Report", "Risk Dashboard", "Budget Analysis", "Steering Committee Deck"],
+            suggestedPrompts=["Generate weekly status report", "Update on Q3 milestones", "Budget burn analysis"],
+            outputFormats=["markdown", "json", "ppt", "docx"],
+            exportOptions=["PDF", "PowerPoint"],
+            kpis=[{"name": "Schedule Variance", "unit": "%"}, {"name": "Budget Variance", "unit": "%"}, {"name": "Milestone Completion", "unit": "%"}],
+            responsibilities=["Program Planning", "Milestone Tracking", "Budget Management", "Risk Identification", "Weekly Reports"],
+            collaborators=["scrum-master", "product-owner", "pmo"]
+        ),
+        
+        Agent(
+            name="Delivery Manager",
+            id="delivery-manager",
+            role="Delivery Management",
+            office="delivery",
+            description="Ensures timely, quality delivery. Manages release planning, environment readiness, and deployment coordination.",
+            systemPrompt="You are a Delivery Manager ensuring on-time, quality delivery. Focus on: release planning, deployment readiness, environment health, quality gates, rollback plans. Release details: {prompt}",
+            recommendedLLM="qwen2.5:32b",
+            supportedModels=["qwen2.5:32b", "mistral:7b"],
+            icon="fa-rocket",
+            capabilities=["Release Planning", "Deployment Coordination", "Environment Management", "Quality Gates", "Rollback Management"],
+            quickActions=["Release Readiness", "Deployment Plan", "Environment Status", "Quality Report"],
+            suggestedPrompts=["Is the release ready to go?", "Deployment rollback plan", "Environment readiness check"],
+            outputFormats=["markdown", "json", "docx"],
+            exportOptions=["PDF", "Word"],
+            responsibilities=["Release Planning", "Deployment Coordination", "Environment Health", "Quality Assurance"],
+            collaborators=["devops-engineer", "qa-engineer", "architect"]
+        ),
+        
+        Agent(
+            name="Scrum Master",
+            id="scrum-master",
+            role="Scrum Master",
+            office="delivery",
+            description="Facilitates sprints, removes blockers, tracks velocity, manages retrospectives, and ensures team health.",
+            systemPrompt="You are a Scrum Master facilitating agile delivery. Track: sprint health, velocity trends, team capacity, blockers, burndown. Generate: sprint planning summaries, standup updates, retrospective insights. Sprint context: {prompt}",
+            recommendedLLM="qwen2.5:7b",
+            supportedModels=["qwen2.5:7b", "mistral:7b", "phi3:14b"],
+            icon="fa-users",
+            capabilities=["Sprint Planning", "Velocity Tracking", "Burndown Management", "Blocker Resolution", "Retrospectives", "Capacity Planning"],
+            quickActions=["Sprint Planning", "Standup Summary", "Burndown Chart", "Velocity Report", "Retro Insights"],
+            suggestedPrompts=["Plan next sprint", "Generate burndown chart", "Team capacity analysis"],
+            outputFormats=["markdown", "json"],
+            kpis=[{"name": "Velocity", "unit": "story points"}, {"name": "Burndown", "unit": "%"}, {"name": "Capacity Used", "unit": "%"}],
+            responsibilities=["Sprint Facilitation", "Blocker Removal", "Velocity Tracking", "Team Health", "Process Improvement"],
+            collaborators=["product-owner", "team-members"]
+        ),
+        
+        Agent(
+            name="Product Owner",
+            id="product-owner",
+            role="Product Ownership",
+            office="delivery",
+            description="Drives product vision, manages backlog, creates user stories, prioritizes features, and ensures market fit.",
+            systemPrompt="You are a Product Owner managing product strategy and backlog. Create user stories with acceptance criteria, manage prioritization, roadmap planning, and competitive analysis. Product details: {prompt}",
+            recommendedLLM="qwen2.5:7b",
+            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            icon="fa-lightbulb",
+            capabilities=["Story Creation", "Backlog Refinement", "Prioritization", "Roadmap Planning", "Release Planning", "Acceptance Criteria"],
+            quickActions=["Create User Story", "Backlog Refinement", "Priority Matrix", "Release Plan"],
+            suggestedPrompts=["Create user story for feature X", "Prioritize backlog", "Build product roadmap"],
+            outputFormats=["markdown", "json"],
+            kpis=[{"name": "Feature Velocity", "unit": "stories/sprint"}, {"name": "Backlog Size", "unit": "stories"}],
+            responsibilities=["Product Vision", "Backlog Management", "Story Creation", "Prioritization", "Feature Acceptance"],
+            collaborators=["scrum-master", "business-analyst", "architect"]
+        ),
+        
+        Agent(
+            name="Business Analyst",
+            id="business-analyst",
+            role="Business Analysis",
+            office="delivery",
+            description="Analyzes business requirements, gaps, processes, and creates documentation for stakeholder alignment.",
+            systemPrompt="You are a Business Analyst bridging business and technology. Analyze: requirements, gaps, business rules, process flows, user journeys. Generate: BA documents, gap analysis, process flows. Business context: {prompt}",
+            recommendedLLM="qwen2.5:7b",
+            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            icon="fa-magnifying-glass",
+            capabilities=["Requirements Analysis", "Gap Analysis", "Process Mapping", "User Journeys", "Business Rules", "Documentation"],
+            quickActions=["Requirements Analysis", "Gap Report", "Process Flow", "User Journey"],
+            suggestedPrompts=["Analyze business requirements", "Create gap analysis", "Map user journey"],
+            outputFormats=["markdown", "json", "docx"],
+            exportOptions=["PDF", "Word"],
+            responsibilities=["Requirements Gathering", "Gap Analysis", "Process Documentation", "Stakeholder Communication"],
+            collaborators=["product-owner", "architect"]
+        ),
+        
+        # ========== ENGINEERING OFFICE ==========
+        Agent(
+            name="Architect",
+            id="architect",
+            role="Enterprise Architecture",
+            office="engineering",
+            description="Designs scalable, secure, maintainable solutions. Reviews architecture, identifies technical debt, and ensures best practices.",
+            systemPrompt="You are an Enterprise Architect designing solutions. Create: architecture diagrams, API designs, cloud architecture, technical specifications. Review: design patterns, scalability, security, maintainability. Technical context: {prompt}",
+            recommendedLLM="deepseek:latest",
+            supportedModels=["deepseek:latest", "qwen2.5:32b"],
+            icon="fa-blueprint",
+            capabilities=["Architecture Design", "API Design", "Cloud Architecture", "Technical Debt Assessment", "Design Reviews", "Sequence Diagrams"],
+            quickActions=["Architecture Review", "Cloud Design", "API Specification", "Technical Debt Report"],
+            suggestedPrompts=["Design microservices architecture", "Review API design", "Cloud migration plan"],
+            outputFormats=["markdown", "json", "docx"],
+            exportOptions=["PDF", "Word"],
+            responsibilities=["Solution Design", "Architecture Reviews", "Technical Decisions", "Best Practices", "Technical Debt Management"],
+            collaborators=["engineering-manager", "developer", "devops-engineer"]
+        ),
+        
+        Agent(
+            name="Engineering Manager",
+            id="engineering-manager",
+            role="Engineering Leadership",
+            office="engineering",
+            description="Manages engineering teams, tracks code quality, reviews code velocity, and ensures technical excellence.",
+            systemPrompt="You are an Engineering Manager leading technical teams. Track: team productivity, code quality, repository insights, technical health. Generate: team reports, performance reviews, technical recommendations. Team context: {prompt}",
+            recommendedLLM="qwen2.5:7b",
+            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            icon="fa-person-hiking",
+            capabilities=["Team Management", "Code Review Analysis", "Repository Insights", "Developer Productivity", "Technical Health Tracking"],
+            quickActions=["Team Report", "Code Quality Summary", "Productivity Analysis", "Technical Health"],
+            suggestedPrompts=["Team productivity analysis", "Code quality trends", "Developer performance"],
+            outputFormats=["markdown", "json"],
+            kpis=[{"name": "Code Quality", "unit": "score"}, {"name": "Team Velocity", "unit": "commits/week"}],
+            responsibilities=["Team Leadership", "Productivity Tracking", "Code Quality", "Technical Development", "Career Growth"],
+            collaborators=["developer", "qa-engineer", "devops-engineer"]
+        ),
+        
+        Agent(
+            name="Developer",
+            id="developer",
+            role="Software Development",
+            office="engineering",
+            description="Writes, debugs, and refactors code. Supports development best practices and code quality.",
+            systemPrompt="You are an Expert Developer. Generate: clean, well-documented code, debug existing code, suggest refactoring. Support: multiple languages, frameworks, design patterns. Code task: {prompt}",
+            recommendedLLM="qwen2.5-coder:7b",
+            supportedModels=["qwen2.5-coder:7b", "deepseek-coder:latest"],
             icon="fa-code",
-            suggestedPrompts=[
-                "Write a Python function to sort a list",
-                "Debug this TypeScript async function",
-                "Create a REST API endpoint in FastAPI"
-            ],
-            actions=["generate", "debug", "explain", "refactor"]
+            capabilities=["Code Generation", "Debugging", "Refactoring", "Code Review", "Documentation", "Testing"],
+            quickActions=["Generate Code", "Debug Code", "Refactor", "Code Review", "Write Tests"],
+            suggestedPrompts=["Write a Python async function", "Debug this TypeScript error", "Create REST API endpoint"],
+            outputFormats=["markdown", "json"],
+            responsibilities=["Code Development", "Code Quality", "Testing", "Documentation", "Technical Improvement"],
+            collaborators=["qa-engineer", "architect"]
         ),
+        
         Agent(
-            name="Content Writer",
-            id="content-writer",
-            description="Write blog posts, articles, and content in various styles",
-            systemPrompt="Write a detailed blog post about '{topic}' in a {style} tone.",
-            supportedModels=["gemma4:latest"],
-            category="content",
-            icon="fa-pen-nib",
-            suggestedPrompts=[
-                "Write about AI in healthcare",
-                "Create marketing copy for a SaaS product",
-                "Draft a technical whitepaper on cloud computing"
-            ],
-            actions=["write", "edit", "rewrite", "expand"]
+            name="QA Engineer",
+            id="qa-engineer",
+            role="Quality Assurance",
+            office="engineering",
+            description="Ensures software quality through testing, automation, and regression analysis.",
+            systemPrompt="You are a QA Engineer ensuring software quality. Create: test cases, automation suggestions, regression analysis. Track: quality metrics, release readiness. Release context: {prompt}",
+            recommendedLLM="qwen2.5:7b",
+            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            icon="fa-vial",
+            capabilities=["Test Case Creation", "Automation Suggestions", "Regression Analysis", "Quality Metrics", "Release Quality"],
+            quickActions=["Test Plan", "Automation Suggestions", "Regression Report", "Quality Metrics"],
+            suggestedPrompts=["Create test cases for feature X", "Automation suggestions", "Release quality assessment"],
+            outputFormats=["markdown", "json"],
+            kpis=[{"name": "Test Coverage", "unit": "%"}, {"name": "Defect Density", "unit": "defects/KLOC"}],
+            responsibilities=["Test Planning", "Test Automation", "Quality Assurance", "Defect Management", "Release Validation"],
+            collaborators=["developer", "delivery-manager"]
         ),
+        
         Agent(
-            name="Legal Analyzer",
-            id="legal-analyzer",
-            description="Extract insights from legal documents and contracts",
-            systemPrompt="Extract key insights from the legal document: {text}. Summarize important clauses, risks, and obligations.",
-            supportedModels=["phi3:14b"],
-            category="legal",
-            icon="fa-scale-balanced",
-            suggestedPrompts=[
-                "Analyze this employment contract",
-                "Review NDA terms",
-                "Identify risks in this service agreement"
-            ],
-            actions=["analyze", "summarize", "identify-risks", "explain-terms"]
+            name="DevOps Engineer",
+            id="devops-engineer",
+            role="DevOps & Infrastructure",
+            office="engineering",
+            description="Manages infrastructure, CI/CD pipelines, deployment, and environment health.",
+            systemPrompt="You are a DevOps Engineer managing infrastructure and deployment. Monitor: pipeline status, environment health, deployment readiness. Provide: rollback plans, environment recommendations. Infrastructure context: {prompt}",
+            recommendedLLM="qwen2.5:7b",
+            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            icon="fa-server",
+            capabilities=["Pipeline Management", "Deployment Coordination", "Environment Health", "Rollback Planning", "Infrastructure Scaling"],
+            quickActions=["Pipeline Status", "Deployment Readiness", "Environment Health", "Rollback Plan"],
+            suggestedPrompts=["Check deployment pipeline", "Environment health status", "Rollback procedure"],
+            outputFormats=["markdown", "json"],
+            responsibilities=["Infrastructure Management", "CI/CD Pipelines", "Deployment Coordination", "Environment Health", "Scalability"],
+            collaborators=["architect", "delivery-manager"]
         ),
+        
         Agent(
-            name="News Summarizer",
-            id="news-summarizer",
-            description="Fetch and summarize news articles by category",
-            systemPrompt="Summarize these news headlines: {news_text}",
-            supportedModels=["qwen3.6:27b"],
-            category="content",
-            icon="fa-newspaper",
-            suggestedPrompts=[
-                "Get tech news summary",
-                "Summarize business headlines",
-                "Review health news stories"
-            ],
-            actions=["summarize", "filter", "categorize"]
+            name="Security Engineer",
+            id="security-engineer",
+            role="Security & Compliance",
+            office="engineering",
+            description="Ensures application security, compliance, and vulnerability management.",
+            systemPrompt="You are a Security Engineer protecting applications. Review: OWASP compliance, dependency vulnerabilities, secret detection, security policies. Generate: security reports, remediation plans. Security context: {prompt}",
+            recommendedLLM="qwen2.5:7b",
+            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            icon="fa-shield",
+            capabilities=["OWASP Review", "Dependency Analysis", "Secret Detection", "Compliance Checking", "Vulnerability Remediation"],
+            quickActions=["Security Review", "Vulnerability Report", "Compliance Check", "Remediation Plan"],
+            suggestedPrompts=["OWASP compliance review", "Vulnerability analysis", "Security assessment"],
+            outputFormats=["markdown", "json", "docx"],
+            exportOptions=["PDF", "Word"],
+            responsibilities=["Security Reviews", "Vulnerability Management", "Compliance", "Security Policies", "Risk Mitigation"],
+            collaborators=["architect", "devops-engineer"]
         ),
+        
+        # ========== DELIVERY INTELLIGENCE ==========
         Agent(
-            name="Proofreader",
-            id="proofreader",
-            description="Proofread and correct text for grammar and clarity",
-            systemPrompt="Correct the grammar, spelling, and sentence structure of the following text: {text}",
-            supportedModels=["DeepSeek-R1:latest"],
-            category="content",
-            icon="fa-spell-check",
-            suggestedPrompts=[
-                "Proofread my essay",
-                "Fix grammar in this paragraph",
-                "Improve clarity of this document"
-            ],
-            actions=["proofread", "correct", "improve-clarity", "check-tone"]
+            name="RAID Manager",
+            id="raid-manager",
+            role="Risk & Issue Management",
+            office="intelligence",
+            description="Tracks and manages Risks, Assumptions, Issues, and Dependencies across the organization.",
+            systemPrompt="You are a RAID Manager tracking organizational risks, assumptions, issues, and dependencies. Generate: RAID reports, impact analysis, mitigation plans. RAID context: {prompt}",
+            recommendedLLM="qwen2.5:7b",
+            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            icon="fa-triangle-exclamation",
+            capabilities=["Risk Tracking", "Issue Management", "Dependency Mapping", "Mitigation Planning", "RAID Reporting"],
+            quickActions=["RAID Report", "Risk Dashboard", "Issue Escalation", "Dependency Map"],
+            suggestedPrompts=["Generate RAID report", "Identify project dependencies", "Risk mitigation plan"],
+            outputFormats=["markdown", "json", "docx"],
+            exportOptions=["PDF", "Word"],
+            responsibilities=["Risk Management", "Issue Tracking", "Dependency Management", "Mitigation Planning"],
+            collaborators=["program-manager", "delivery-manager"]
         ),
+        
         Agent(
-            name="Text Summarizer",
-            id="text-summarizer",
-            description="Summarize long texts into concise summaries",
-            systemPrompt="Summarize this text concisely: {text}",
-            supportedModels=["mistral:7b"],
-            category="content",
-            icon="fa-compress",
-            suggestedPrompts=[
-                "Summarize this article",
-                "Create executive summary",
-                "Condense this report"
-            ],
-            actions=["summarize", "extract-key-points", "create-outline"]
+            name="Risk Prediction Engine",
+            id="risk-prediction",
+            role="Predictive Analytics",
+            office="intelligence",
+            description="Predicts delivery risks including delays, budget overruns, quality issues using ML/AI.",
+            systemPrompt="You are a Risk Prediction Engine. Analyze: historical data, current project state, team capacity, technical metrics. Predict: delay probability, budget risk, quality risk, team burnout. Project data: {prompt}",
+            recommendedLLM="deepseek:latest",
+            supportedModels=["deepseek:latest", "qwen2.5:32b"],
+            icon="fa-crystal-ball",
+            capabilities=["Delay Prediction", "Budget Risk Forecasting", "Quality Risk Analysis", "Trend Analysis", "Proactive Alerts"],
+            quickActions=["Risk Forecast", "Delay Prediction", "Budget Risk", "Quality Risk"],
+            suggestedPrompts=["Predict delay probability", "Budget risk analysis", "Quality risk assessment"],
+            outputFormats=["markdown", "json"],
+            kpis=[{"name": "Prediction Accuracy", "unit": "%"}],
+            responsibilities=["Risk Prediction", "Trend Analysis", "Proactive Alerting", "Historical Analysis"],
+            collaborators=["raid-manager", "delivery-analytics"]
         ),
+        
         Agent(
-            name="Virtual Assistant",
-            id="virtual-assistant",
-            description="AI-powered assistant for task scheduling and queries",
-            systemPrompt="You are an AI-powered virtual assistant that helps with task scheduling and answering queries. User: {user_query}",
-            supportedModels=["gemma4:latest"],
-            category="assistant",
-            icon="fa-robot",
-            suggestedPrompts=[
-                "Schedule a meeting for tomorrow",
-                "What's the weather in New York?",
-                "Remind me to call the bank"
-            ],
-            actions=["schedule", "answer", "remind", "organize"]
+            name="Resource Manager",
+            id="resource-manager",
+            role="Resource Management",
+            office="intelligence",
+            description="Manages resource allocation, utilization, bench forecasting, and hiring needs.",
+            systemPrompt="You are a Resource Manager optimizing allocation and utilization. Track: resource allocation, utilization rates, bench status, hiring needs. Forecast: capacity, hiring requirements. Resource context: {prompt}",
+            recommendedLLM="qwen2.5:7b",
+            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            icon="fa-people-group",
+            capabilities=["Allocation Planning", "Utilization Tracking", "Bench Forecasting", "Hiring Forecasting", "Capacity Planning"],
+            quickActions=["Allocation Report", "Utilization Analysis", "Bench Status", "Hiring Forecast"],
+            suggestedPrompts=["Resource allocation plan", "Utilization report", "Hiring forecast"],
+            outputFormats=["markdown", "json"],
+            kpis=[{"name": "Utilization", "unit": "%"}, {"name": "Bench Cost", "unit": "$"}],
+            responsibilities=["Resource Allocation", "Utilization Optimization", "Hiring Planning", "Capacity Management"],
+            collaborators=["program-manager", "engineering-manager"]
         ),
+        
         Agent(
-            name="Customer Support",
-            id="customer-support",
-            description="Professional customer support chatbot",
-            systemPrompt="You are a customer support chatbot. Answer the user's question professionally and concisely. User: {user_query}",
-            supportedModels=["qwen3.6:27b"],
-            category="support",
-            icon="fa-headset",
-            suggestedPrompts=[
-                "How do I reset my password?",
-                "What's your refund policy?",
-                "I'm having trouble with my account"
-            ],
-            actions=["support", "troubleshoot", "escalate", "document"]
+            name="Delivery Analytics",
+            id="delivery-analytics",
+            role="Business Intelligence",
+            office="intelligence",
+            description="Generates insights from delivery data: KPIs, forecasts, trends, and root cause analysis.",
+            systemPrompt="You are a Delivery Analytics engine. Analyze: historical delivery data, team metrics, project KPIs. Generate: trend analysis, forecasts, root cause analysis, actionable insights. Analytics context: {prompt}",
+            recommendedLLM="qwen2.5:32b",
+            supportedModels=["qwen2.5:32b", "deepseek:latest"],
+            icon="fa-chart-bar",
+            capabilities=["KPI Tracking", "Forecasting", "Trend Analysis", "Root Cause Analysis", "Dashboard Generation"],
+            quickActions=["KPI Dashboard", "Trend Report", "Forecast", "Root Cause Analysis"],
+            suggestedPrompts=["Generate KPI dashboard", "Trend analysis", "Forecast next quarter"],
+            outputFormats=["markdown", "json", "ppt"],
+            exportOptions=["PDF", "PowerPoint"],
+            kpis=[{"name": "Data Quality", "unit": "%"}],
+            responsibilities=["Analytics", "Forecasting", "Trend Analysis", "Data Insights", "Performance Tracking"],
+            collaborators=["risk-prediction", "program-manager"]
         ),
+        
         Agent(
-            name="Shop Recommender",
-            id="shop-recommender",
-            description="AI product recommendation engine",
-            systemPrompt="You are an AI product recommender. Based on user preferences, suggest the best matching products. User Preferences: {preferences}",
-            supportedModels=["granite4.1:8b"],
-            category="ecommerce",
-            icon="fa-cart-shopping",
-            suggestedPrompts=[
-                "Recommend laptops under $1000",
-                "Suggest summer clothes",
-                "Find budget-friendly cameras"
-            ],
-            actions=["recommend", "compare", "filter", "review"]
+            name="Meeting Intelligence",
+            id="meeting-intelligence",
+            role="Meeting Management",
+            office="intelligence",
+            description="Summarizes meetings, extracts action items, tracks decisions, and generates minutes.",
+            systemPrompt="You are a Meeting Intelligence system. Process meeting transcripts/notes to: generate summaries, extract action items, document decisions, track attendees. Meeting content: {prompt}",
+            recommendedLLM="qwen2.5:7b",
+            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            icon="fa-comments",
+            capabilities=["Meeting Summaries", "Action Item Extraction", "Decision Tracking", "Minutes Generation", "Attendee Management"],
+            quickActions=["Meeting Summary", "Action Items", "Decision Log", "Minutes"],
+            suggestedPrompts=["Summarize meeting transcript", "Extract action items", "Generate meeting minutes"],
+            outputFormats=["markdown", "json", "docx"],
+            exportOptions=["PDF", "Word"],
+            responsibilities=["Meeting Management", "Action Tracking", "Decision Documentation", "Communication"],
+            collaborators=["all"]
         ),
+        
         Agent(
-            name="Symptom Checker",
-            id="symptom-checker",
-            description="Medical AI assistant for symptom analysis",
-            systemPrompt="You are a medical AI assistant. Analyze symptoms and provide possible explanations and general advice. Do not provide diagnosis. User Symptoms: {symptoms}",
-            supportedModels=["phi3:14b"],
-            category="medical",
-            icon="fa-stethoscope",
-            suggestedPrompts=[
-                "I have a headache and fever",
-                "Analyze these allergy symptoms",
-                "What could cause persistent cough?"
-            ],
-            actions=["analyze", "advise", "educate", "refer"]
+            name="Documentation Assistant",
+            id="documentation-assistant",
+            role="Knowledge Management",
+            office="intelligence",
+            description="Creates and maintains technical documentation, runbooks, and knowledge bases.",
+            systemPrompt="You are a Documentation Assistant. Create: technical documentation, runbooks, knowledge base articles, API docs. Maintain: clarity, completeness, accuracy. Content: {prompt}",
+            recommendedLLM="qwen2.5:7b",
+            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            icon="fa-book",
+            capabilities=["Technical Documentation", "Runbook Creation", "API Documentation", "Knowledge Base", "Content Maintenance"],
+            quickActions=["Create Documentation", "Runbook Template", "API Docs", "Knowledge Base"],
+            suggestedPrompts=["Create deployment runbook", "Write API documentation", "Knowledge base article"],
+            outputFormats=["markdown", "docx", "html"],
+            exportOptions=["PDF", "Word"],
+            responsibilities=["Documentation", "Knowledge Management", "Clarity", "Maintenance", "Training"],
+            collaborators=["all"]
+        ),
+        
+        Agent(
+            name="Communication Assistant",
+            id="communication-assistant",
+            role="Communications",
+            office="intelligence",
+            description="Drafts status reports, client updates, escalations, and executive communications.",
+            systemPrompt="You are a Communication Assistant crafting professional communications. Draft: status reports, client emails, leadership updates, escalation templates. Context: {prompt}",
+            recommendedLLM="qwen2.5:7b",
+            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            icon="fa-envelope",
+            capabilities=["Status Reporting", "Client Communication", "Leadership Updates", "Escalation Management", "Stakeholder Updates"],
+            quickActions=["Status Report", "Client Email", "Leadership Update", "Escalation"],
+            suggestedPrompts=["Draft status report", "Client update email", "Executive summary"],
+            outputFormats=["markdown", "docx"],
+            exportOptions=["PDF", "Word"],
+            responsibilities=["Communications", "Stakeholder Management", "Escalation Handling", "Clarity", "Professionalism"],
+            collaborators=["program-manager", "delivery-manager"]
+        ),
+        
+        # ========== ADMINISTRATION ==========
+        Agent(
+            name="PMO Director",
+            id="pmo",
+            role="Program Management Office",
+            office="admin",
+            description="Oversees portfolio governance, cross-project dependencies, and financial reporting.",
+            systemPrompt="You are a PMO Director managing portfolio governance. Generate: portfolio health reports, governance summaries, financial reports, dependency analysis. Portfolio context: {prompt}",
+            recommendedLLM="qwen2.5:7b",
+            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            icon="fa-building",
+            capabilities=["Portfolio Management", "Governance Oversight", "Financial Reporting", "Dependency Management", "Portfolio Dashboards"],
+            quickActions=["Portfolio Report", "Governance Review", "Financial Analysis", "Dependency Map"],
+            suggestedPrompts=["Portfolio health status", "Governance review", "Financial reporting"],
+            outputFormats=["markdown", "json", "ppt", "docx"],
+            exportOptions=["PDF", "PowerPoint", "Word"],
+            kpis=[{"name": "Portfolio Health", "unit": "%"}],
+            responsibilities=["Portfolio Governance", "Financial Oversight", "Dependency Management", "Compliance", "Strategic Alignment"],
+            collaborators=["program-manager", "executive-copilot"]
         ),
     ]
     
     for agent in agents:
         agent_registry.register(agent)
     
-    logger.info(f"Initialized {len(agents)} agents")
+    logger.info(f"DeliveryAI initialized with {len(agents)} specialized agents")
+    for office in ["executive", "delivery", "engineering", "intelligence", "admin"]:
+        office_agents = [a for a in agents if a.office == office]
+        logger.info(f"   {office.title()}: {len(office_agents)} agents")
 
 
 # Initialize agents when app starts
@@ -312,6 +584,95 @@ def get_all_agents():
     """ Get all available agents with metadata """
     agents = agent_registry.list_agents_metadata()
     return {"total_agents": len(agents), "agents": agents}
+
+@app.get("/api/agents/by-office/{office}")
+def get_agents_by_office(office: str):
+    """ Get agents grouped by office tier """
+    all_agents = agent_registry.get_all_agents()
+    office_agents = [a for a in all_agents if a.office == office.lower()]
+    return {
+        "office": office.lower(),
+        "count": len(office_agents),
+        "agents": [a.to_dict() for a in office_agents]
+    }
+
+@app.get("/api/organization")
+def get_organization_structure():
+    """ Get complete DeliveryAI organizational structure """
+    all_agents = agent_registry.get_all_agents()
+    
+    offices = {
+        "executive": {"title": "Executive Office", "agents": []},
+        "delivery": {"title": "Delivery Office", "agents": []},
+        "engineering": {"title": "Engineering Office", "agents": []},
+        "intelligence": {"title": "Delivery Intelligence", "agents": []},
+        "admin": {"title": "Administration", "agents": []},
+    }
+    
+    for agent in all_agents:
+        if agent.office in offices:
+            offices[agent.office]["agents"].append({
+                "id": agent.id,
+                "name": agent.name,
+                "role": agent.role,
+                "icon": agent.icon,
+                "description": agent.description,
+            })
+    
+    return {
+        "organization": "DeliveryAI",
+        "structure": offices,
+        "total_agents": len(all_agents)
+    }
+
+@app.get("/api/agent/{agent_id}/details")
+def get_agent_details(agent_id: str):
+    """ Get complete agent details with all capabilities """
+    agent = agent_registry.get_agent(agent_id)
+    if not agent:
+        raise HTTPException(status_code=404, detail=f"Agent '{agent_id}' not found")
+    
+    return {
+        "agent": agent.to_dict(),
+        "capabilities": agent.capabilities,
+        "quickActions": agent.quickActions,
+        "suggestedPrompts": agent.suggestedPrompts,
+        "outputFormats": agent.outputFormats,
+        "kpis": agent.kpis,
+        "collaborators": agent.collaborators,
+    }
+
+@app.get("/api/dashboard/health")
+def get_dashboard_health():
+    """ Get aggregated health metrics for dashboard """
+    all_agents = agent_registry.get_all_agents()
+    
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "portfolioHealth": 85,  # TODO: calculate from project data
+        "sprintHealth": 78,
+        "deliveryConfidence": 82,
+        "budgetHealth": 90,
+        "velocity": 42,  # story points
+        "agentCount": len(all_agents),
+        "lastUpdate": datetime.now().isoformat(),
+    }
+
+@app.get("/api/dashboard/offices")
+def get_dashboard_offices():
+    """ Get office-level metrics """
+    all_agents = agent_registry.get_all_agents()
+    
+    offices_data = {}
+    for office_name in ["executive", "delivery", "engineering", "intelligence", "admin"]:
+        agents = [a for a in all_agents if a.office == office_name]
+        offices_data[office_name] = {
+            "name": office_name.replace("_", " ").title(),
+            "agentCount": len(agents),
+            "agents": [{"id": a.id, "name": a.name, "role": a.role} for a in agents],
+        }
+    
+    return offices_data
 
 @app.get("/api/endpoints")
 def get_all_endpoints():
