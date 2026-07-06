@@ -415,6 +415,111 @@ form::-webkit-scrollbar-thumb:hover,
     background: rgba(255, 255, 255, 0.15);
 }
 
+/* ============================================================
+   DYNAMIC AGENT SECTION & DESCRIPTION STYLES
+   ============================================================ */
+
+.agent-section {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 1rem;
+    animation: slideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.agent-description {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+    backdrop-filter: blur(32px);
+}
+
+.agent-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+}
+
+.agent-icon-wrap {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    border-radius: 0.9rem;
+    background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.25));
+    border: 1px solid rgba(99,102,241,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: #818cf8;
+}
+
+.agent-meta h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    color: var(--text-primary);
+    background: none;
+    -webkit-text-fill-color: unset;
+}
+
+.agent-meta p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+}
+
+.agent-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: capitalize;
+}
+
+.badge-category {
+    background: rgba(99,102,241,0.15);
+    color: #a5b4fc;
+    border: 1px solid rgba(99,102,241,0.25);
+}
+
+.badge-model {
+    background: rgba(52,211,153,0.1);
+    color: #6ee7b7;
+    border: 1px solid rgba(52,211,153,0.2);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+}
+
+.dynamic-form {
+    background: var(--card-bg);
+    backdrop-filter: blur(32px);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    padding: 1.75rem;
+    flex: 1;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+}
+
+.dynamic-form:hover {
+    border-color: rgba(255,255,255,0.1);
+}
+
 /* Responsive Media Queries */
 @media (max-width: 1024px) {
     .content-wrapper {

@@ -414,21 +414,19 @@ def invoke_agent(agent_id: str, **form_data):
 # ============================================================================
 
 @app.post("/api/generate_code")
-def generate_code(prompt: str = Form(...), mode: str = Form(...)):
+def generate_code(prompt: str = Form(...), mode: str = Form("generate")):
     """DEPRECATED: Use /api/agent/code-assistant/invoke instead"""
     agent = agent_registry.get_agent("code-assistant")
-    if mode == "generate":
-        prompt_text = f"Write a clean, well-documented {prompt} code snippet."
-    elif mode == "debug":
+    if mode == "debug":
         prompt_text = f"Debug and fix the following code:\n{prompt}"
     else:
-        raise HTTPException(status_code=400, detail="Invalid mode selected.")
+        prompt_text = f"Write clean, well-documented code for: {prompt}"
     
     model = agent.supportedModels[0]
     return call_ollama(model, prompt_text)
 
 @app.post("/api/generate_content")
-def generate_content(topic: str = Form(...), style: str = Form(...)):
+def generate_content(topic: str = Form(...), style: str = Form("professional")):
     """DEPRECATED: Use /api/agent/content-writer/invoke instead"""
     agent = agent_registry.get_agent("content-writer")
     prompt = f"Write a detailed blog post about '{topic}' in a {style} tone."
