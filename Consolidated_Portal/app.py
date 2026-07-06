@@ -45,10 +45,112 @@ def serve_homepage():
     """ Serve the index.html file when accessing the root URL """
     return FileResponse(STATIC_DIR / "index.html")
 
+@app.get("/api/endpoints")
+def get_all_endpoints():
+    """ Get all available API endpoints with descriptions """
+    endpoints = [
+        {
+            "id": 1,
+            "name": "Code Assistant",
+            "endpoint": "/api/generate_code",
+            "method": "POST",
+            "model": "qwen2.5-coder:7b",
+            "description": "Generate or debug code",
+            "params": {"prompt": "Code description", "mode": "generate|debug"}
+        },
+        {
+            "id": 2,
+            "name": "Content Writer",
+            "endpoint": "/api/generate_content",
+            "method": "POST",
+            "model": "gemma4:latest",
+            "description": "Write blog posts and content",
+            "params": {"topic": "Blog topic", "style": "formal|casual|technical"}
+        },
+        {
+            "id": 3,
+            "name": "Legal Analyzer",
+            "endpoint": "/api/analyze_legal_text",
+            "method": "POST",
+            "model": "phi3:14b",
+            "description": "Analyze legal documents",
+            "params": {"text": "Legal document text"}
+        },
+        {
+            "id": 4,
+            "name": "News Summarizer",
+            "endpoint": "/api/fetch_and_summarize_news",
+            "method": "GET",
+            "model": "qwen3.6:27b",
+            "description": "Fetch and summarize news",
+            "params": {"category": "technology|business|health|science"}
+        },
+        {
+            "id": 5,
+            "name": "Proofreader",
+            "endpoint": "/api/proofread",
+            "method": "POST",
+            "model": "DeepSeek-R1:latest",
+            "description": "Proofread and correct text",
+            "params": {"text": "Text to proofread"}
+        },
+        {
+            "id": 6,
+            "name": "Text Summarizer",
+            "endpoint": "/api/summarize",
+            "method": "POST",
+            "model": "mistral:7b",
+            "description": "Summarize any text",
+            "params": {"text": "Text to summarize"}
+        },
+        {
+            "id": 7,
+            "name": "Virtual Assistant",
+            "endpoint": "/api/virtual_assistant",
+            "method": "POST",
+            "model": "gemma4:latest",
+            "description": "Get answers and schedule tasks",
+            "params": {"user_query": "Your question or task"}
+        },
+        {
+            "id": 8,
+            "name": "Customer Support",
+            "endpoint": "/api/customer_support",
+            "method": "POST",
+            "model": "qwen3.6:27b",
+            "description": "Customer support chatbot",
+            "params": {"user_query": "Customer question"}
+        },
+        {
+            "id": 9,
+            "name": "Shop Recommender",
+            "endpoint": "/api/ecommerce_recommender",
+            "method": "POST",
+            "model": "granite4.1:8b",
+            "description": "Get product recommendations",
+            "params": {"preferences": "Your shopping preferences"}
+        },
+        {
+            "id": 10,
+            "name": "Symptom Checker",
+            "endpoint": "/api/medical_symptom_checker",
+            "method": "POST",
+            "model": "phi3:14b",
+            "description": "Analyze medical symptoms",
+            "params": {"symptoms": "List of symptoms"}
+        }
+    ]
+    return {"total_endpoints": len(endpoints), "endpoints": endpoints}
+
 @app.get("/api/health")
 def health_check():
     """ Health check endpoint """
     return {"status": "ok", "timestamp": datetime.now().isoformat()}
+
+@app.get("/api/default")
+def default_check():
+    """ Default health check that responds with model greeting """
+    return {"message": "Hi, I am Ollama Multi-Agent Portal", "version": "1.0", "status": "operational"}
 
 @app.get("/api/ollama-status")
 def check_ollama_status():
