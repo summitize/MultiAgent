@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consolidated AI Portal</title>
+    <title>MultiAgent AI Delivery Operating System</title>
     <!-- Use Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
@@ -12,92 +12,55 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar Navigation (Dynamically Populated) -->
         <nav class="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fa-solid fa-microchip"></i> <span>AI Portal</span></h2>
+                <h2><i class="fa-solid fa-microchip"></i> <span>AI Agents</span></h2>
             </div>
-            <ul class="nav-links">
-                <li class="active" data-target="code-assistant"><i class="fa-solid fa-code"></i> <span>Code Assistant</span></li>
-                <li data-target="content-writer"><i class="fa-solid fa-pen-nib"></i> <span>Content Writer</span></li>
-                <li data-target="legal-analyzer"><i class="fa-solid fa-scale-balanced"></i> <span>Legal Analyzer</span></li>
-                <li data-target="news-summarizer"><i class="fa-solid fa-newspaper"></i> <span>News Summarizer</span></li>
-                <li data-target="proofreader"><i class="fa-solid fa-spell-check"></i> <span>Proofreader</span></li>
-                <li data-target="text-summarizer"><i class="fa-solid fa-compress"></i> <span>Text Summarizer</span></li>
-                <li data-target="virtual-assistant"><i class="fa-solid fa-robot"></i> <span>Virtual Assistant</span></li>
-                <li data-target="customer-support"><i class="fa-solid fa-headset"></i> <span>Customer Support</span></li>
-                <li data-target="ecom-recommender"><i class="fa-solid fa-cart-shopping"></i> <span>Shop Recommender</span></li>
-                <li data-target="symptom-checker"><i class="fa-solid fa-stethoscope"></i> <span>Symptom Checker</span></li>
-                <li data-target="api-docs"><i class="fa-solid fa-book"></i> <span>API Documentation</span></li>
+            <ul class="nav-links" id="agent-nav">
+                <!-- Agents will be populated here by script.js -->
+                <li class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading agents...</li>
             </ul>
         </nav>
 
         <!-- Main Content Area -->
         <main class="main-content">
             <header class="top-bar">
-                <h1 id="page-title">AI Code Assistant</h1>
+                <h1 id="page-title">Agent Portal</h1>
             </header>
 
             <div class="content-wrapper">
-                <!-- Code Assistant Form -->
-                <section id="code-assistant" class="tool-section active-section">
-                    <form id="form-code">
-                        <div class="form-group">
-                            <label>Prompt</label>
-                            <textarea name="prompt" placeholder="Describe the code you want or paste code to debug..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Mode</label>
-                            <select name="mode">
-                                <option value="generate">Generate</option>
-                                <option value="debug">Debug</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn-primary">Generate <i class="fa-solid fa-sparkles"></i></button>
+                <!-- Dynamic Agent Form Section -->
+                <section id="agent-form-section" class="agent-section active-section">
+                    <div id="agent-description" class="agent-description">
+                        <!-- Agent description will be loaded here -->
+                    </div>
+                    <form id="dynamic-agent-form" class="dynamic-form">
+                        <!-- Form fields will be dynamically generated based on agent -->
                     </form>
                 </section>
 
-                <!-- Content Writer Form -->
-                <section id="content-writer" class="tool-section">
-                    <form id="form-content">
-                        <div class="form-group">
-                            <label>Topic</label>
-                            <input type="text" name="topic" placeholder="E.g. Future of AI">
+                <!-- Response Area -->
+                <div class="response-card" id="response-container">
+                    <div class="loader" id="loader" style="display: none;">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i>
+                        <span>Invoking agent...</span>
+                    </div>
+                    <div class="response-content" id="response-content">
+                        <!-- Result from API will be rendered here -->
+                        <div class="placeholder-text">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Select an agent, provide input, and submit to see response.</span>
                         </div>
-                        <div class="form-group">
-                            <label>Style</label>
-                            <input type="text" name="style" placeholder="E.g. Professional, Humorous">
-                        </div>
-                        <button type="submit" class="btn-primary">Write Content <i class="fa-solid fa-pen"></i></button>
-                    </form>
-                </section>
-
-                <!-- Legal Analyzer Form -->
-                <section id="legal-analyzer" class="tool-section">
-                    <form id="form-legal">
-                        <div class="form-group">
-                            <label>Legal Text</label>
-                            <textarea name="text" placeholder="Paste legal document here..."></textarea>
-                        </div>
-                        <button type="submit" class="btn-primary">Analyze <i class="fa-solid fa-magnifying-glass"></i></button>
-                    </form>
-                </section>
-
-                <!-- News Summarizer Form -->
-                <section id="news-summarizer" class="tool-section">
-                    <form id="form-news">
-                        <div class="form-group">
-                            <label>Category</label>
-                            <select name="category">
-                                <option value="technology">Technology</option>
-                                <option value="business">Business</option>
-                                <option value="health">Health</option>
-                                <option value="science">Science</option>
-                                <option value="sports">Sports</option>
-                                <option value="entertainment">Entertainment</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn-primary">Fetch & Summarize <i class="fa-solid fa-bolt"></i></button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/static/script.js"></script>
+</body>
+</html>
                     </form>
                 </section>
 

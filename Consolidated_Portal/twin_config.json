@@ -1,0 +1,56 @@
+{
+  "organization_id": "multiagent-org-001",
+  "organization_name": "MultiAgent Delivery Organization",
+  "memory_file": "project_memory.json",
+  "current_sprint_id": "default-sprint",
+  "current_program_id": "default-program",
+  "adapters": {
+    "jira": {
+      "type": "JiraAdapter",
+      "enabled": true,
+      "jira_url": "https://your-jira-instance.atlassian.net",
+      "jira_token": "${JIRA_API_TOKEN}",
+      "board_id": "1"
+    },
+    "github": {
+      "type": "GitHubAdapter",
+      "enabled": true,
+      "owner": "your-github-org",
+      "repos": ["repo1", "repo2"],
+      "github_token": "${GITHUB_TOKEN}"
+    },
+    "azure_devops": {
+      "type": "AzureDevOpsAdapter",
+      "enabled": true,
+      "organization": "your-azure-org",
+      "project": "your-project",
+      "pat_token": "${AZURE_DEVOPS_TOKEN}"
+    }
+  },
+  "sync_schedule": {
+    "jira": 5,
+    "github": 10,
+    "azure_devops": 15,
+    "confluence": 60,
+    "teams": 30,
+    "slack": 15,
+    "power_bi": 60
+  },
+  "risk_detection": {
+    "enabled": true,
+    "detectors": [
+      "spillover_risk",
+      "capacity_bottleneck",
+      "budget_overrun",
+      "dependency_conflict",
+      "resource_utilization",
+      "release_readiness"
+    ]
+  },
+  "notifications": {
+    "enabled": true,
+    "critical_to": ["executive-copilot@example.com"],
+    "high_to": ["program-manager@example.com"],
+    "escalation_threshold_hours": 24
+  }
+}

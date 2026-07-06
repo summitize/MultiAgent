@@ -7,13 +7,47 @@ import os
 import json
 from datetime import datetime
 from pathlib import Path
+from dataclasses import dataclass, asdict, field
+from typing import List, Dict, Any, Optional, Callable
+import logging
+import logging.handlers
+import sys
 
 # Get the directory of the current file
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
+LOGS_DIR = BASE_DIR / "logs"
+LOGS_DIR.mkdir(exist_ok=True)
+
+# Configure logging
+log_file = LOGS_DIR / f"app_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+# File handler for detailed logs
+file_handler = logging.FileHandler(log_file)
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(formatter)
+
+# Console handler for console output
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(formatter)
+
+# Configure root logger
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.DEBUG)
+root_logger.addHandler(file_handler)
+root_logger.addHandler(console_handler)
+
+# Application logger
+logger = logging.getLogger(__name__)
+logger.info(f"Application started. Logs will be written to: {log_file}")
 
 # Create FastAPI app instance
-app = FastAPI(title="Consolidated Multi-Agent Portal", docs_url=None, redoc_url=None)
+app = FastAPI(title="MultiAgent AI Delivery Operating System", docs_url=None, redoc_url=None)
 
 # Allow CORS for development
 app.add_middleware(
@@ -40,107 +74,267 @@ NEWS_API_KEY = os.getenv("NEWS_API_KEY", "NEWS_API_KEY")  # Replace with actual 
 # Track Ollama status
 ollama_status = {"available": True, "last_check": None, "error": None}
 
+# ============================================================================
+# AGENT INTERFACE & REGISTRY
+# ============================================================================
+
+@dataclass
+class Agent:
+    """
+    Unified Agent Interface
+    Every agent must expose these properties to be managed by the system.
+    """
+    name: str  # Display name (e.g., "Code Assistant", "Program Director")
+    id: str  # Unique identifier (e.g., "code-assistant", "program-director")
+    description: str  # What the agent does
+    systemPrompt: str  # System instruction/prompt template
+    supportedModels: List[str]  # List of models this agent can use
+    category: str  # Category (e.g., "development", "content", "delivery")
+    icon: str  # FontAwesome icon class (e.g., "fa-code", "fa-crown")
+    tools: List[Dict[str, Any]] = field(default_factory=list)  # Available tools for the agent
+    memory: Dict[str, Any] = field(default_factory=dict)  # Memory/context storage
+    actions: List[str] = field(default_factory=list)  # Available actions
+    suggestedPrompts: List[str] = field(default_factory=list)  # Example prompts to guide users
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert agent to dictionary, excluding memory for API responses"""
+        data = asdict(self)
+        # Don't expose internal memory in API
+        data.pop('memory', None)
+        return data
+
+
+class AgentRegistry:
+    """Manages all registered agents"""
+    
+    def __init__(self):
+        self.agents: Dict[str, Agent] = {}
+    
+    def register(self, agent: Agent) -> None:
+        """Register a new agent"""
+        self.agents[agent.id] = agent
+        logger.info(f"Registered agent: {agent.name} ({agent.id})")
+    
+    def get_agent(self, agent_id: str) -> Optional[Agent]:
+        """Get agent by ID"""
+        return self.agents.get(agent_id)
+    
+    def get_all_agents(self) -> List[Agent]:
+        """Get all registered agents"""
+        return list(self.agents.values())
+    
+    def list_agents_metadata(self) -> List[Dict[str, Any]]:
+        """Get metadata for all agents"""
+        return [agent.to_dict() for agent in self.get_all_agents()]
+
+
+# Create global registry
+agent_registry = AgentRegistry()
+
+# ============================================================================
+# AGENT DEFINITIONS
+# ============================================================================
+
+# Initialize all agents
+def initialize_agents():
+    """Register all agents with the system"""
+    
+    agents = [
+        Agent(
+            name="Code Assistant",
+            id="code-assistant",
+            description="Generate or debug code with support for multiple languages",
+            systemPrompt="Write clean, well-documented {prompt} code snippet.",
+            supportedModels=["qwen2.5-coder:7b"],
+            category="development",
+            icon="fa-code",
+            suggestedPrompts=[
+                "Write a Python function to sort a list",
+                "Debug this TypeScript async function",
+                "Create a REST API endpoint in FastAPI"
+            ],
+            actions=["generate", "debug", "explain", "refactor"]
+        ),
+        Agent(
+            name="Content Writer",
+            id="content-writer",
+            description="Write blog posts, articles, and content in various styles",
+            systemPrompt="Write a detailed blog post about '{topic}' in a {style} tone.",
+            supportedModels=["gemma4:latest"],
+            category="content",
+            icon="fa-pen-nib",
+            suggestedPrompts=[
+                "Write about AI in healthcare",
+                "Create marketing copy for a SaaS product",
+                "Draft a technical whitepaper on cloud computing"
+            ],
+            actions=["write", "edit", "rewrite", "expand"]
+        ),
+        Agent(
+            name="Legal Analyzer",
+            id="legal-analyzer",
+            description="Extract insights from legal documents and contracts",
+            systemPrompt="Extract key insights from the legal document: {text}. Summarize important clauses, risks, and obligations.",
+            supportedModels=["phi3:14b"],
+            category="legal",
+            icon="fa-scale-balanced",
+            suggestedPrompts=[
+                "Analyze this employment contract",
+                "Review NDA terms",
+                "Identify risks in this service agreement"
+            ],
+            actions=["analyze", "summarize", "identify-risks", "explain-terms"]
+        ),
+        Agent(
+            name="News Summarizer",
+            id="news-summarizer",
+            description="Fetch and summarize news articles by category",
+            systemPrompt="Summarize these news headlines: {news_text}",
+            supportedModels=["qwen3.6:27b"],
+            category="content",
+            icon="fa-newspaper",
+            suggestedPrompts=[
+                "Get tech news summary",
+                "Summarize business headlines",
+                "Review health news stories"
+            ],
+            actions=["summarize", "filter", "categorize"]
+        ),
+        Agent(
+            name="Proofreader",
+            id="proofreader",
+            description="Proofread and correct text for grammar and clarity",
+            systemPrompt="Correct the grammar, spelling, and sentence structure of the following text: {text}",
+            supportedModels=["DeepSeek-R1:latest"],
+            category="content",
+            icon="fa-spell-check",
+            suggestedPrompts=[
+                "Proofread my essay",
+                "Fix grammar in this paragraph",
+                "Improve clarity of this document"
+            ],
+            actions=["proofread", "correct", "improve-clarity", "check-tone"]
+        ),
+        Agent(
+            name="Text Summarizer",
+            id="text-summarizer",
+            description="Summarize long texts into concise summaries",
+            systemPrompt="Summarize this text concisely: {text}",
+            supportedModels=["mistral:7b"],
+            category="content",
+            icon="fa-compress",
+            suggestedPrompts=[
+                "Summarize this article",
+                "Create executive summary",
+                "Condense this report"
+            ],
+            actions=["summarize", "extract-key-points", "create-outline"]
+        ),
+        Agent(
+            name="Virtual Assistant",
+            id="virtual-assistant",
+            description="AI-powered assistant for task scheduling and queries",
+            systemPrompt="You are an AI-powered virtual assistant that helps with task scheduling and answering queries. User: {user_query}",
+            supportedModels=["gemma4:latest"],
+            category="assistant",
+            icon="fa-robot",
+            suggestedPrompts=[
+                "Schedule a meeting for tomorrow",
+                "What's the weather in New York?",
+                "Remind me to call the bank"
+            ],
+            actions=["schedule", "answer", "remind", "organize"]
+        ),
+        Agent(
+            name="Customer Support",
+            id="customer-support",
+            description="Professional customer support chatbot",
+            systemPrompt="You are a customer support chatbot. Answer the user's question professionally and concisely. User: {user_query}",
+            supportedModels=["qwen3.6:27b"],
+            category="support",
+            icon="fa-headset",
+            suggestedPrompts=[
+                "How do I reset my password?",
+                "What's your refund policy?",
+                "I'm having trouble with my account"
+            ],
+            actions=["support", "troubleshoot", "escalate", "document"]
+        ),
+        Agent(
+            name="Shop Recommender",
+            id="shop-recommender",
+            description="AI product recommendation engine",
+            systemPrompt="You are an AI product recommender. Based on user preferences, suggest the best matching products. User Preferences: {preferences}",
+            supportedModels=["granite4.1:8b"],
+            category="ecommerce",
+            icon="fa-cart-shopping",
+            suggestedPrompts=[
+                "Recommend laptops under $1000",
+                "Suggest summer clothes",
+                "Find budget-friendly cameras"
+            ],
+            actions=["recommend", "compare", "filter", "review"]
+        ),
+        Agent(
+            name="Symptom Checker",
+            id="symptom-checker",
+            description="Medical AI assistant for symptom analysis",
+            systemPrompt="You are a medical AI assistant. Analyze symptoms and provide possible explanations and general advice. Do not provide diagnosis. User Symptoms: {symptoms}",
+            supportedModels=["phi3:14b"],
+            category="medical",
+            icon="fa-stethoscope",
+            suggestedPrompts=[
+                "I have a headache and fever",
+                "Analyze these allergy symptoms",
+                "What could cause persistent cough?"
+            ],
+            actions=["analyze", "advise", "educate", "refer"]
+        ),
+    ]
+    
+    for agent in agents:
+        agent_registry.register(agent)
+    
+    logger.info(f"Initialized {len(agents)} agents")
+
+
+# Initialize agents when app starts
+initialize_agents()
+
+
 @app.get("/")
 def serve_homepage():
     """ Serve the index.html file when accessing the root URL """
     return FileResponse(STATIC_DIR / "index.html")
 
+@app.get("/api/agents")
+def get_all_agents():
+    """ Get all available agents with metadata """
+    agents = agent_registry.list_agents_metadata()
+    return {"total_agents": len(agents), "agents": agents}
+
 @app.get("/api/endpoints")
 def get_all_endpoints():
-    """ Get all available API endpoints with descriptions """
-    endpoints = [
-        {
-            "id": 1,
-            "name": "Code Assistant",
-            "endpoint": "/api/generate_code",
-            "method": "POST",
-            "model": "qwen2.5-coder:7b",
-            "description": "Generate or debug code",
-            "params": {"prompt": "Code description", "mode": "generate|debug"}
-        },
-        {
-            "id": 2,
-            "name": "Content Writer",
-            "endpoint": "/api/generate_content",
-            "method": "POST",
-            "model": "gemma4:latest",
-            "description": "Write blog posts and content",
-            "params": {"topic": "Blog topic", "style": "formal|casual|technical"}
-        },
-        {
-            "id": 3,
-            "name": "Legal Analyzer",
-            "endpoint": "/api/analyze_legal_text",
-            "method": "POST",
-            "model": "phi3:14b",
-            "description": "Analyze legal documents",
-            "params": {"text": "Legal document text"}
-        },
-        {
-            "id": 4,
-            "name": "News Summarizer",
-            "endpoint": "/api/fetch_and_summarize_news",
-            "method": "GET",
-            "model": "qwen3.6:27b",
-            "description": "Fetch and summarize news",
-            "params": {"category": "technology|business|health|science"}
-        },
-        {
-            "id": 5,
-            "name": "Proofreader",
-            "endpoint": "/api/proofread",
-            "method": "POST",
-            "model": "DeepSeek-R1:latest",
-            "description": "Proofread and correct text",
-            "params": {"text": "Text to proofread"}
-        },
-        {
-            "id": 6,
-            "name": "Text Summarizer",
-            "endpoint": "/api/summarize",
-            "method": "POST",
-            "model": "mistral:7b",
-            "description": "Summarize any text",
-            "params": {"text": "Text to summarize"}
-        },
-        {
-            "id": 7,
-            "name": "Virtual Assistant",
-            "endpoint": "/api/virtual_assistant",
-            "method": "POST",
-            "model": "gemma4:latest",
-            "description": "Get answers and schedule tasks",
-            "params": {"user_query": "Your question or task"}
-        },
-        {
-            "id": 8,
-            "name": "Customer Support",
-            "endpoint": "/api/customer_support",
-            "method": "POST",
-            "model": "qwen3.6:27b",
-            "description": "Customer support chatbot",
-            "params": {"user_query": "Customer question"}
-        },
-        {
-            "id": 9,
-            "name": "Shop Recommender",
-            "endpoint": "/api/ecommerce_recommender",
-            "method": "POST",
-            "model": "granite4.1:8b",
-            "description": "Get product recommendations",
-            "params": {"preferences": "Your shopping preferences"}
-        },
-        {
-            "id": 10,
-            "name": "Symptom Checker",
-            "endpoint": "/api/medical_symptom_checker",
-            "method": "POST",
-            "model": "phi3:14b",
-            "description": "Analyze medical symptoms",
-            "params": {"symptoms": "List of symptoms"}
+    """ 
+    BACKWARD COMPATIBILITY: Get all available API endpoints with descriptions 
+    This endpoint maintains backward compatibility with old frontend code
+    """
+    agents = agent_registry.get_all_agents()
+    endpoints = []
+    
+    for idx, agent in enumerate(agents, 1):
+        endpoint_data = {
+            "id": idx,
+            "name": agent.name,
+            "agent_id": agent.id,
+            "description": agent.description,
+            "model": agent.supportedModels[0] if agent.supportedModels else "unknown",
+            "category": agent.category,
+            "icon": agent.icon
         }
-    ]
-    return {"total_endpoints": len(endpoints), "endpoints": endpoints}
+        endpoints.append(endpoint_data)
+    
+    return {"total_agents": len(endpoints), "agents": endpoints}
 
 @app.get("/api/health")
 def health_check():
@@ -180,32 +374,78 @@ def check_ollama_status():
         ollama_status["error"] = str(e)
         return {"available": False, "error": f"Ollama check failed: {str(e)}"}
 
-# 1. AI Code Assistant
+# ============================================================================
+# UNIFIED AGENT ROUTING
+# ============================================================================
+
+def build_prompt(agent: Agent, **kwargs) -> str:
+    """
+    Build the actual prompt by substituting template variables
+    """
+    prompt = agent.systemPrompt
+    for key, value in kwargs.items():
+        prompt = prompt.replace(f"{{{key}}}", str(value))
+    return prompt
+
+
+@app.post("/api/agent/{agent_id}/invoke")
+def invoke_agent(agent_id: str, **form_data):
+    """
+    Universal agent invocation endpoint
+    Works with any registered agent
+    """
+    agent = agent_registry.get_agent(agent_id)
+    if not agent:
+        raise HTTPException(status_code=404, detail=f"Agent '{agent_id}' not found")
+    
+    logger.info(f"Invoking agent: {agent.name} ({agent_id})")
+    
+    # Build prompt from system prompt template
+    prompt = build_prompt(agent, **form_data)
+    
+    # Use first supported model
+    model = agent.supportedModels[0] if agent.supportedModels else "mistral:7b"
+    
+    return call_ollama(model, prompt)
+
+
+# ============================================================================
+# BACKWARD COMPATIBILITY ENDPOINTS (Maps old routes to new agent system)
+# ============================================================================
+
 @app.post("/api/generate_code")
 def generate_code(prompt: str = Form(...), mode: str = Form(...)):
+    """DEPRECATED: Use /api/agent/code-assistant/invoke instead"""
+    agent = agent_registry.get_agent("code-assistant")
     if mode == "generate":
-        full_prompt = f"Write a clean, well-documented {prompt} code snippet."
+        prompt_text = f"Write a clean, well-documented {prompt} code snippet."
     elif mode == "debug":
-        full_prompt = f"Debug and fix the following code:\n{prompt}"
+        prompt_text = f"Debug and fix the following code:\n{prompt}"
     else:
         raise HTTPException(status_code=400, detail="Invalid mode selected.")
-    return call_ollama("qwen2.5-coder:7b", full_prompt)
+    
+    model = agent.supportedModels[0]
+    return call_ollama(model, prompt_text)
 
-# 2. AI Content Writer
 @app.post("/api/generate_content")
 def generate_content(topic: str = Form(...), style: str = Form(...)):
+    """DEPRECATED: Use /api/agent/content-writer/invoke instead"""
+    agent = agent_registry.get_agent("content-writer")
     prompt = f"Write a detailed blog post about '{topic}' in a {style} tone."
-    return call_ollama("gemma4:latest", prompt)
+    model = agent.supportedModels[0]
+    return call_ollama(model, prompt)
 
-# 3. AI Legal Analyzer
 @app.post("/api/analyze_legal_text")
 def analyze_legal_text(text: str = Form(...)):
+    """DEPRECATED: Use /api/agent/legal-analyzer/invoke instead"""
+    agent = agent_registry.get_agent("legal-analyzer")
     prompt = f"Extract key insights from the following legal document:\n{text}\nSummarize important clauses, risks, and obligations."
-    return call_ollama("phi3:14b", prompt)
+    model = agent.supportedModels[0]
+    return call_ollama(model, prompt)
 
-# 4. AI News Summarizer
 @app.get("/api/fetch_and_summarize_news")
 def fetch_and_summarize_news(category: str = Query("technology")):
+    """DEPRECATED: Use /api/agent/news-summarizer/invoke instead"""
     headers = {"Authorization": f"Bearer {NEWS_API_KEY}"}
     params = {"category": category, "language": "en", "apiKey": NEWS_API_KEY}
     try:
@@ -219,51 +459,71 @@ def fetch_and_summarize_news(category: str = Query("technology")):
         articles = news_data["articles"][:3]
         news_text = "\n".join([f"- {article['title']} ({article['source']['name']})" for article in articles])
         
-        # Call ollama
-        ollama_res = call_ollama("qwen3.6:27b", f"Summarize these news headlines:\n{news_text}")
+        agent = agent_registry.get_agent("news-summarizer")
+        model = agent.supportedModels[0]
+        ollama_res = call_ollama(model, f"Summarize these news headlines:\n{news_text}")
         return {"summary": ollama_res.get("response", "No summary available."), "articles": articles}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch or summarize news: {str(e)}")
 
-# 5. AI Proofreader
 @app.post("/api/proofread")
 def proofread_text(text: str = Form(...)):
+    """DEPRECATED: Use /api/agent/proofreader/invoke instead"""
+    agent = agent_registry.get_agent("proofreader")
     prompt = f"Correct the grammar, spelling, and sentence structure of the following text:\n{text}"
-    return call_ollama("DeepSeek-R1:latest", prompt)
+    model = agent.supportedModels[0]
+    return call_ollama(model, prompt)
 
-# 6. AI Text Summarizer
 @app.post("/api/summarize")
 def summarize_text(text: str = Form(...)):
+    """DEPRECATED: Use /api/agent/text-summarizer/invoke instead"""
+    agent = agent_registry.get_agent("text-summarizer")
     prompt = f"Summarize this: {text}"
-    return call_ollama("mistral:7b", prompt)
+    model = agent.supportedModels[0]
+    return call_ollama(model, prompt)
 
-# 7. AI Virtual Assistant
 @app.post("/api/virtual_assistant")
 def virtual_assistant(user_query: str = Form(...)):
+    """DEPRECATED: Use /api/agent/virtual-assistant/invoke instead"""
+    agent = agent_registry.get_agent("virtual-assistant")
     prompt = f"You are an AI-powered virtual assistant that helps with task scheduling and answering queries.\nUser: {user_query}\nAI:"
-    return call_ollama("gemma4:latest", prompt)
+    model = agent.supportedModels[0]
+    return call_ollama(model, prompt)
 
-# 8. Customer Support Chatbot
 @app.post("/api/customer_support")
 def customer_support(user_query: str = Form(...)):
+    """DEPRECATED: Use /api/agent/customer-support/invoke instead"""
+    agent = agent_registry.get_agent("customer-support")
     prompt = f"You are a customer support chatbot. Answer the user's question professionally and concisely.\nUser: {user_query}\nChatbot:"
-    return call_ollama("qwen3.6:27b", prompt)
+    model = agent.supportedModels[0]
+    return call_ollama(model, prompt)
 
-# 9. eCommerce AI Recommender
 @app.post("/api/ecommerce_recommender")
 def ecommerce_recommender(preferences: str = Form(...)):
+    """DEPRECATED: Use /api/agent/shop-recommender/invoke instead"""
+    agent = agent_registry.get_agent("shop-recommender")
     prompt = f"You are an AI product recommender. Based on the user's preferences, suggest the best matching products.\nUser Preferences: {preferences}\nRecommendations:"
-    return call_ollama("granite4.1:8b", prompt)
+    model = agent.supportedModels[0]
+    return call_ollama(model, prompt)
 
-# 10. Medical AI Symptom Checker
 @app.post("/api/medical_symptom_checker")
 def medical_symptom_checker(symptoms: str = Form(...)):
+    """DEPRECATED: Use /api/agent/symptom-checker/invoke instead"""
+    agent = agent_registry.get_agent("symptom-checker")
     prompt = f"You are a medical AI assistant trained to analyze symptoms. Based on the provided symptoms, give possible explanations and general advice. Do not provide a diagnosis or replace a doctor's consultation.\nUser Symptoms: {symptoms}\nMedical AI:"
-    return call_ollama("phi3:14b", prompt)
+    model = agent.supportedModels[0]
+    return call_ollama(model, prompt)
 
 
-# Helper function
+# ============================================================================
+# LLM SERVICE
+# ============================================================================
+
 def call_ollama(model_name: str, prompt: str):
+    """
+    Central LLM abstraction layer
+    All agent requests go through this function
+    """
     headers = {"Content-Type": "application/json"}
     try:
         response = requests.post(
@@ -280,12 +540,15 @@ def call_ollama(model_name: str, prompt: str):
         return {"response": json_response.get("response", "No valid response received.")}
     except requests.exceptions.Timeout:
         ollama_status["available"] = False
+        logger.error(f"Ollama timeout for model {model_name}")
         raise HTTPException(status_code=503, detail="⚠️ Ollama is not responding. The service may be offline or overloaded. Please try again later.")
     except requests.exceptions.ConnectionError:
         ollama_status["available"] = False
+        logger.error(f"Cannot connect to Ollama at {OLLAMA_BASE_URL}")
         raise HTTPException(status_code=503, detail="⚠️ Cannot connect to Ollama. Please ensure the local Ollama service is running on " + OLLAMA_BASE_URL)
     except requests.exceptions.RequestException as e:
         ollama_status["available"] = False
+        logger.error(f"Ollama request failed: {str(e)}")
         raise HTTPException(status_code=503, detail=f"⚠️ Ollama request failed: {str(e)}")
 
 # Ensure the app is properly exported as ASGI application

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MultiAgent AI Delivery Operating System</title>
+    <!-- Use Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation (Dynamically Populated) -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-microchip"></i> <span>AI Agents</span></h2>
+            </div>
+            <ul class="nav-links" id="agent-nav">
+                <!-- Agents will be populated here by script.js -->
+                <li class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading agents...</li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h1 id="page-title">Agent Portal</h1>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Dynamic Agent Form Section -->
+                <section id="agent-form-section" class="agent-section active-section">
+                    <div id="agent-description" class="agent-description">
+                        <!-- Agent description will be loaded here -->
+                    </div>
+                    <form id="dynamic-agent-form" class="dynamic-form">
+                        <!-- Form fields will be dynamically generated based on agent -->
+                    </form>
+                </section>
+
+                <!-- Response Area -->
+                <div class="response-card" id="response-container">
+                    <div class="loader" id="loader" style="display: none;">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i>
+                        <span>Invoking agent...</span>
+                    </div>
+                    <div class="response-content" id="response-content">
+                        <!-- Result from API will be rendered here -->
+                        <div class="placeholder-text">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Select an agent, provide input, and submit to see response.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/static/script.js"></script>
+</body>
+</html>
