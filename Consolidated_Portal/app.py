@@ -6,6 +6,11 @@ import requests
 import os
 import json
 from datetime import datetime
+from pathlib import Path
+
+# Get the directory of the current file
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
 
 # Create FastAPI app instance
 app = FastAPI(title="Consolidated Multi-Agent Portal", docs_url=None, redoc_url=None)
@@ -20,8 +25,8 @@ app.add_middleware(
 )
 
 # Static files mapping
-os.makedirs("static", exist_ok=True)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+STATIC_DIR.mkdir(exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # Configuration from environment variables
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
@@ -38,7 +43,7 @@ ollama_status = {"available": True, "last_check": None, "error": None}
 @app.get("/")
 def serve_homepage():
     """ Serve the index.html file when accessing the root URL """
-    return FileResponse(os.path.join("static", "index.html"))
+    return FileResponse(STATIC_DIR / "index.html")
 
 @app.get("/api/health")
 def health_check():
