@@ -186,7 +186,10 @@ def call_ollama(model_name: str, prompt: str):
         ollama_status["available"] = False
         raise HTTPException(status_code=503, detail=f"⚠️ Ollama request failed: {str(e)}")
 
+# Ensure the app is properly exported as ASGI application
+asgi_app = app
+
 if __name__ == "__main__":
     import uvicorn
     # Using 8080 to avoid conflicts with 8000
-    uvicorn.run("app:app", host="0.0.0.0", port=8080, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8080, reload=True)
