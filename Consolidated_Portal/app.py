@@ -7,7 +7,8 @@ import os
 import json
 from datetime import datetime
 
-app = FastAPI(title="Consolidated Multi-Agent Portal")
+# Create FastAPI app instance
+app = FastAPI(title="Consolidated Multi-Agent Portal", docs_url=None, redoc_url=None)
 
 # Allow CORS for development
 app.add_middleware(
