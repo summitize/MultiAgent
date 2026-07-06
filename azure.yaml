@@ -1,0 +1,9 @@
+name: ai-playground
+metadata:
+  template: python-fastapi
+
+services:
+  web:
+    project: .
+    language: python
+    host: appservice
