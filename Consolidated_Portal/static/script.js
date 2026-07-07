@@ -14,7 +14,7 @@ let currentAgent = null;
 
 // Endpoint map: agent-id → unified API path via /api/agent/{agent_id}/invoke
 const endpointMap = {
-    // DeliveryAI Agents - all use unified endpoint
+    // DeliveryOS AI Agents - all use unified endpoint
     'executive-copilot': '/api/agent/executive-copilot/invoke',
     'program-manager': '/api/agent/program-manager/invoke',
     'delivery-manager': '/api/agent/delivery-manager/invoke',

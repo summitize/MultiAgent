@@ -81,7 +81,7 @@ ollama_status = {"available": True, "last_check": None, "error": None}
 @dataclass
 class Agent:
     """
-    DeliveryAI Agent Interface - Advanced Enterprise Agent Model
+    DeliveryOS AI Agent Interface - Advanced Enterprise Agent Model
     Every agent in the organization represents one team member.
     """
     # Identity
@@ -170,7 +170,7 @@ agent_registry = AgentRegistry()
 
 # Initialize all agents
 def initialize_agents():
-    """Register all DeliveryAI agents with the system"""
+    """Register all DeliveryOS AI agents with the system"""
     
     agents = [
         # ========== EXECUTIVE OFFICE ==========
@@ -181,8 +181,8 @@ def initialize_agents():
             office="executive",
             description="Strategic partner for executives. Provides portfolio insights, risk assessment, and board-level recommendations.",
             systemPrompt="You are an Executive Copilot advising C-level executives. Provide strategic insights, portfolio health analysis, and high-level recommendations. Focus on: business impact, ROI, risk mitigation, stakeholder alignment. User query: {prompt}",
-            recommendedLLM="claude:latest",
-            supportedModels=["claude:latest", "deepseek:latest", "qwen2.5:32b"],
+            recommendedLLM="deepseek-r1:latest",
+            supportedModels=["deepseek-r1:latest", "qwq:latest", "gemma4:latest"],
             icon="fa-crown",
             capabilities=["Portfolio Analysis", "Strategic Planning", "Risk Assessment", "Executive Reporting", "Stakeholder Communication"],
             quickActions=["Portfolio Health", "Executive Summary", "Risk Report", "Board Deck"],
@@ -202,8 +202,8 @@ def initialize_agents():
             office="delivery",
             description="Manages multiple projects across portfolio. Tracks milestones, dependencies, risks, budgets, and stakeholder coordination.",
             systemPrompt="You are a Program Manager overseeing multiple interdependent projects. Track: milestones, dependencies, budget, risks, stakeholder updates. Provide weekly status reports and executive dashboards. Program context: {prompt}",
-            recommendedLLM="claude:latest",
-            supportedModels=["claude:latest", "qwen2.5:32b"],
+            recommendedLLM="deepseek-r1:latest",
+            supportedModels=["deepseek-r1:latest", "phi3:14b"],
             icon="fa-chart-line",
             capabilities=["Program Planning", "Milestone Tracking", "Risk Management", "Budget Monitoring", "Weekly Reports", "Stakeholder Updates"],
             quickActions=["Weekly Status", "Milestone Report", "Risk Dashboard", "Budget Analysis", "Steering Committee Deck"],
@@ -222,8 +222,8 @@ def initialize_agents():
             office="delivery",
             description="Ensures timely, quality delivery. Manages release planning, environment readiness, and deployment coordination.",
             systemPrompt="You are a Delivery Manager ensuring on-time, quality delivery. Focus on: release planning, deployment readiness, environment health, quality gates, rollback plans. Release details: {prompt}",
-            recommendedLLM="qwen2.5:32b",
-            supportedModels=["qwen2.5:32b", "mistral:7b"],
+            recommendedLLM="phi3:14b",
+            supportedModels=["phi3:14b", "mistral:7b"],
             icon="fa-rocket",
             capabilities=["Release Planning", "Deployment Coordination", "Environment Management", "Quality Gates", "Rollback Management"],
             quickActions=["Release Readiness", "Deployment Plan", "Environment Status", "Quality Report"],
@@ -241,8 +241,8 @@ def initialize_agents():
             office="delivery",
             description="Facilitates sprints, removes blockers, tracks velocity, manages retrospectives, and ensures team health.",
             systemPrompt="You are a Scrum Master facilitating agile delivery. Track: sprint health, velocity trends, team capacity, blockers, burndown. Generate: sprint planning summaries, standup updates, retrospective insights. Sprint context: {prompt}",
-            recommendedLLM="qwen2.5:7b",
-            supportedModels=["qwen2.5:7b", "mistral:7b", "phi3:14b"],
+            recommendedLLM="mistral:7b",
+            supportedModels=["mistral:7b", "phi3:14b", "granite4.1:8b"],
             icon="fa-users",
             capabilities=["Sprint Planning", "Velocity Tracking", "Burndown Management", "Blocker Resolution", "Retrospectives", "Capacity Planning"],
             quickActions=["Sprint Planning", "Standup Summary", "Burndown Chart", "Velocity Report", "Retro Insights"],
@@ -260,8 +260,8 @@ def initialize_agents():
             office="delivery",
             description="Drives product vision, manages backlog, creates user stories, prioritizes features, and ensures market fit.",
             systemPrompt="You are a Product Owner managing product strategy and backlog. Create user stories with acceptance criteria, manage prioritization, roadmap planning, and competitive analysis. Product details: {prompt}",
-            recommendedLLM="qwen2.5:7b",
-            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            recommendedLLM="phi3:14b",
+            supportedModels=["phi3:14b", "mistral:7b"],
             icon="fa-lightbulb",
             capabilities=["Story Creation", "Backlog Refinement", "Prioritization", "Roadmap Planning", "Release Planning", "Acceptance Criteria"],
             quickActions=["Create User Story", "Backlog Refinement", "Priority Matrix", "Release Plan"],
@@ -279,8 +279,8 @@ def initialize_agents():
             office="delivery",
             description="Analyzes business requirements, gaps, processes, and creates documentation for stakeholder alignment.",
             systemPrompt="You are a Business Analyst bridging business and technology. Analyze: requirements, gaps, business rules, process flows, user journeys. Generate: BA documents, gap analysis, process flows. Business context: {prompt}",
-            recommendedLLM="qwen2.5:7b",
-            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            recommendedLLM="mistral:7b",
+            supportedModels=["mistral:7b", "phi3:14b"],
             icon="fa-magnifying-glass",
             capabilities=["Requirements Analysis", "Gap Analysis", "Process Mapping", "User Journeys", "Business Rules", "Documentation"],
             quickActions=["Requirements Analysis", "Gap Report", "Process Flow", "User Journey"],
@@ -299,8 +299,8 @@ def initialize_agents():
             office="engineering",
             description="Designs scalable, secure, maintainable solutions. Reviews architecture, identifies technical debt, and ensures best practices.",
             systemPrompt="You are an Enterprise Architect designing solutions. Create: architecture diagrams, API designs, cloud architecture, technical specifications. Review: design patterns, scalability, security, maintainability. Technical context: {prompt}",
-            recommendedLLM="deepseek:latest",
-            supportedModels=["deepseek:latest", "qwen2.5:32b"],
+            recommendedLLM="deepseek-r1:latest",
+            supportedModels=["deepseek-r1:latest", "phi3:14b"],
             icon="fa-blueprint",
             capabilities=["Architecture Design", "API Design", "Cloud Architecture", "Technical Debt Assessment", "Design Reviews", "Sequence Diagrams"],
             quickActions=["Architecture Review", "Cloud Design", "API Specification", "Technical Debt Report"],
@@ -318,8 +318,8 @@ def initialize_agents():
             office="engineering",
             description="Manages engineering teams, tracks code quality, reviews code velocity, and ensures technical excellence.",
             systemPrompt="You are an Engineering Manager leading technical teams. Track: team productivity, code quality, repository insights, technical health. Generate: team reports, performance reviews, technical recommendations. Team context: {prompt}",
-            recommendedLLM="qwen2.5:7b",
-            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            recommendedLLM="mistral:7b",
+            supportedModels=["mistral:7b", "phi3:14b"],
             icon="fa-person-hiking",
             capabilities=["Team Management", "Code Review Analysis", "Repository Insights", "Developer Productivity", "Technical Health Tracking"],
             quickActions=["Team Report", "Code Quality Summary", "Productivity Analysis", "Technical Health"],
@@ -338,7 +338,7 @@ def initialize_agents():
             description="Writes, debugs, and refactors code. Supports development best practices and code quality.",
             systemPrompt="You are an Expert Developer. Generate: clean, well-documented code, debug existing code, suggest refactoring. Support: multiple languages, frameworks, design patterns. Code task: {prompt}",
             recommendedLLM="qwen2.5-coder:7b",
-            supportedModels=["qwen2.5-coder:7b", "deepseek-coder:latest"],
+            supportedModels=["qwen2.5-coder:7b", "codellama:latest"],
             icon="fa-code",
             capabilities=["Code Generation", "Debugging", "Refactoring", "Code Review", "Documentation", "Testing"],
             quickActions=["Generate Code", "Debug Code", "Refactor", "Code Review", "Write Tests"],
@@ -355,8 +355,8 @@ def initialize_agents():
             office="engineering",
             description="Ensures software quality through testing, automation, and regression analysis.",
             systemPrompt="You are a QA Engineer ensuring software quality. Create: test cases, automation suggestions, regression analysis. Track: quality metrics, release readiness. Release context: {prompt}",
-            recommendedLLM="qwen2.5:7b",
-            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            recommendedLLM="phi3:14b",
+            supportedModels=["phi3:14b", "mistral:7b"],
             icon="fa-vial",
             capabilities=["Test Case Creation", "Automation Suggestions", "Regression Analysis", "Quality Metrics", "Release Quality"],
             quickActions=["Test Plan", "Automation Suggestions", "Regression Report", "Quality Metrics"],
@@ -374,8 +374,8 @@ def initialize_agents():
             office="engineering",
             description="Manages infrastructure, CI/CD pipelines, deployment, and environment health.",
             systemPrompt="You are a DevOps Engineer managing infrastructure and deployment. Monitor: pipeline status, environment health, deployment readiness. Provide: rollback plans, environment recommendations. Infrastructure context: {prompt}",
-            recommendedLLM="qwen2.5:7b",
-            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            recommendedLLM="mistral:7b",
+            supportedModels=["mistral:7b", "phi3:14b"],
             icon="fa-server",
             capabilities=["Pipeline Management", "Deployment Coordination", "Environment Health", "Rollback Planning", "Infrastructure Scaling"],
             quickActions=["Pipeline Status", "Deployment Readiness", "Environment Health", "Rollback Plan"],
@@ -392,8 +392,8 @@ def initialize_agents():
             office="engineering",
             description="Ensures application security, compliance, and vulnerability management.",
             systemPrompt="You are a Security Engineer protecting applications. Review: OWASP compliance, dependency vulnerabilities, secret detection, security policies. Generate: security reports, remediation plans. Security context: {prompt}",
-            recommendedLLM="qwen2.5:7b",
-            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            recommendedLLM="phi3:14b",
+            supportedModels=["phi3:14b", "mistral:7b"],
             icon="fa-shield",
             capabilities=["OWASP Review", "Dependency Analysis", "Secret Detection", "Compliance Checking", "Vulnerability Remediation"],
             quickActions=["Security Review", "Vulnerability Report", "Compliance Check", "Remediation Plan"],
@@ -412,8 +412,8 @@ def initialize_agents():
             office="intelligence",
             description="Tracks and manages Risks, Assumptions, Issues, and Dependencies across the organization.",
             systemPrompt="You are a RAID Manager tracking organizational risks, assumptions, issues, and dependencies. Generate: RAID reports, impact analysis, mitigation plans. RAID context: {prompt}",
-            recommendedLLM="qwen2.5:7b",
-            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            recommendedLLM="mistral:7b",
+            supportedModels=["mistral:7b", "phi3:14b"],
             icon="fa-triangle-exclamation",
             capabilities=["Risk Tracking", "Issue Management", "Dependency Mapping", "Mitigation Planning", "RAID Reporting"],
             quickActions=["RAID Report", "Risk Dashboard", "Issue Escalation", "Dependency Map"],
@@ -431,8 +431,8 @@ def initialize_agents():
             office="intelligence",
             description="Predicts delivery risks including delays, budget overruns, quality issues using ML/AI.",
             systemPrompt="You are a Risk Prediction Engine. Analyze: historical data, current project state, team capacity, technical metrics. Predict: delay probability, budget risk, quality risk, team burnout. Project data: {prompt}",
-            recommendedLLM="deepseek:latest",
-            supportedModels=["deepseek:latest", "qwen2.5:32b"],
+            recommendedLLM="deepseek-r1:latest",
+            supportedModels=["deepseek-r1:latest", "qwq:latest"],
             icon="fa-crystal-ball",
             capabilities=["Delay Prediction", "Budget Risk Forecasting", "Quality Risk Analysis", "Trend Analysis", "Proactive Alerts"],
             quickActions=["Risk Forecast", "Delay Prediction", "Budget Risk", "Quality Risk"],
@@ -450,8 +450,8 @@ def initialize_agents():
             office="intelligence",
             description="Manages resource allocation, utilization, bench forecasting, and hiring needs.",
             systemPrompt="You are a Resource Manager optimizing allocation and utilization. Track: resource allocation, utilization rates, bench status, hiring needs. Forecast: capacity, hiring requirements. Resource context: {prompt}",
-            recommendedLLM="qwen2.5:7b",
-            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            recommendedLLM="phi3:14b",
+            supportedModels=["phi3:14b", "mistral:7b"],
             icon="fa-people-group",
             capabilities=["Allocation Planning", "Utilization Tracking", "Bench Forecasting", "Hiring Forecasting", "Capacity Planning"],
             quickActions=["Allocation Report", "Utilization Analysis", "Bench Status", "Hiring Forecast"],
@@ -469,8 +469,8 @@ def initialize_agents():
             office="intelligence",
             description="Generates insights from delivery data: KPIs, forecasts, trends, and root cause analysis.",
             systemPrompt="You are a Delivery Analytics engine. Analyze: historical delivery data, team metrics, project KPIs. Generate: trend analysis, forecasts, root cause analysis, actionable insights. Analytics context: {prompt}",
-            recommendedLLM="qwen2.5:32b",
-            supportedModels=["qwen2.5:32b", "deepseek:latest"],
+            recommendedLLM="gemma4:latest",
+            supportedModels=["gemma4:latest", "deepseek-r1:latest"],
             icon="fa-chart-bar",
             capabilities=["KPI Tracking", "Forecasting", "Trend Analysis", "Root Cause Analysis", "Dashboard Generation"],
             quickActions=["KPI Dashboard", "Trend Report", "Forecast", "Root Cause Analysis"],
@@ -489,8 +489,8 @@ def initialize_agents():
             office="intelligence",
             description="Summarizes meetings, extracts action items, tracks decisions, and generates minutes.",
             systemPrompt="You are a Meeting Intelligence system. Process meeting transcripts/notes to: generate summaries, extract action items, document decisions, track attendees. Meeting content: {prompt}",
-            recommendedLLM="qwen2.5:7b",
-            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            recommendedLLM="mistral:7b",
+            supportedModels=["mistral:7b", "phi3:14b"],
             icon="fa-comments",
             capabilities=["Meeting Summaries", "Action Item Extraction", "Decision Tracking", "Minutes Generation", "Attendee Management"],
             quickActions=["Meeting Summary", "Action Items", "Decision Log", "Minutes"],
@@ -508,8 +508,8 @@ def initialize_agents():
             office="intelligence",
             description="Creates and maintains technical documentation, runbooks, and knowledge bases.",
             systemPrompt="You are a Documentation Assistant. Create: technical documentation, runbooks, knowledge base articles, API docs. Maintain: clarity, completeness, accuracy. Content: {prompt}",
-            recommendedLLM="qwen2.5:7b",
-            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            recommendedLLM="phi3:14b",
+            supportedModels=["phi3:14b", "mistral:7b"],
             icon="fa-book",
             capabilities=["Technical Documentation", "Runbook Creation", "API Documentation", "Knowledge Base", "Content Maintenance"],
             quickActions=["Create Documentation", "Runbook Template", "API Docs", "Knowledge Base"],
@@ -527,8 +527,8 @@ def initialize_agents():
             office="intelligence",
             description="Drafts status reports, client updates, escalations, and executive communications.",
             systemPrompt="You are a Communication Assistant crafting professional communications. Draft: status reports, client emails, leadership updates, escalation templates. Context: {prompt}",
-            recommendedLLM="qwen2.5:7b",
-            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            recommendedLLM="mistral:7b",
+            supportedModels=["mistral:7b", "phi3:14b"],
             icon="fa-envelope",
             capabilities=["Status Reporting", "Client Communication", "Leadership Updates", "Escalation Management", "Stakeholder Updates"],
             quickActions=["Status Report", "Client Email", "Leadership Update", "Escalation"],
@@ -547,8 +547,8 @@ def initialize_agents():
             office="admin",
             description="Oversees portfolio governance, cross-project dependencies, and financial reporting.",
             systemPrompt="You are a PMO Director managing portfolio governance. Generate: portfolio health reports, governance summaries, financial reports, dependency analysis. Portfolio context: {prompt}",
-            recommendedLLM="qwen2.5:7b",
-            supportedModels=["qwen2.5:7b", "mistral:7b"],
+            recommendedLLM="phi3:14b",
+            supportedModels=["phi3:14b", "mistral:7b"],
             icon="fa-building",
             capabilities=["Portfolio Management", "Governance Oversight", "Financial Reporting", "Dependency Management", "Portfolio Dashboards"],
             quickActions=["Portfolio Report", "Governance Review", "Financial Analysis", "Dependency Map"],
@@ -564,7 +564,7 @@ def initialize_agents():
     for agent in agents:
         agent_registry.register(agent)
     
-    logger.info(f"DeliveryAI initialized with {len(agents)} specialized agents")
+    logger.info(f"DeliveryOS AI initialized with {len(agents)} specialized agents")
     for office in ["executive", "delivery", "engineering", "intelligence", "admin"]:
         office_agents = [a for a in agents if a.office == office]
         logger.info(f"   {office.title()}: {len(office_agents)} agents")
@@ -598,7 +598,7 @@ def get_agents_by_office(office: str):
 
 @app.get("/api/organization")
 def get_organization_structure():
-    """ Get complete DeliveryAI organizational structure """
+    """ Get complete DeliveryOS AI organizational structure """
     all_agents = agent_registry.get_all_agents()
     
     offices = {
@@ -620,7 +620,7 @@ def get_organization_structure():
             })
     
     return {
-        "organization": "DeliveryAI",
+        "organization": "DeliveryOS AI",
         "structure": offices,
         "total_agents": len(all_agents)
     }
